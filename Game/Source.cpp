@@ -670,19 +670,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				right = true;
 				left = false;
-				if (!collision)
-				{
-					toggle = 1;
-				}
+				toggle = 1;
+				
 			}
 			else if (wParam == VK_LEFT)
 			{
 				left = true;
 				right = false;
-				if (!collision)
-				{
-					toggle = 0;
-				}
+				toggle = 0;
 			}
 
 			break;
