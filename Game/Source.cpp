@@ -240,6 +240,8 @@ void animation(HWND hWnd)
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(3);
 					}
+					Ground.top+=2;
+					Ground.bottom+=2;
 					bounce = false;
 					Sleep(10);
 					break;
