@@ -52,7 +52,6 @@ int Squish = 0;
 int Squash = 0;
 int Squanch = 0;
 int frames = 0;
-BOOL bounce;
 
 // Entities
 static RECT Player;
@@ -189,7 +188,6 @@ void animation(HWND hWnd)
 						slow = false;
 						toggle = -1;
 						frames = 0;
-						bounce = true;
 						while (Squash != 0)
 						{
 							Squash--;
@@ -197,7 +195,6 @@ void animation(HWND hWnd)
 							InvalidateRect(hWnd, NULL, TRUE);
 							Sleep(5);
 						}
-						bounce = false;
 						Squish = 0;
 						Sleep(10);
 						break;
@@ -222,7 +219,6 @@ void animation(HWND hWnd)
 					slow = false;
 					toggle = -1;
 					frames = 0;
-					bounce = true;
 					while (Squash != 0)
 					{
 						Squash--;
@@ -242,7 +238,6 @@ void animation(HWND hWnd)
 					}
 					Ground.top+=2;
 					Ground.bottom+=2;
-					bounce = false;
 					Sleep(10);
 					break;
 				}
@@ -368,7 +363,7 @@ void movement(HWND hWnd)
 							InvalidateRect(hWnd, NULL, TRUE);
 							Sleep(3);
 						}
-						else if (toggle == 0 || bounce)
+						else if (toggle == 0)
 						{
 							slow = true;
 						}
@@ -440,7 +435,7 @@ void movement(HWND hWnd)
 							InvalidateRect(hWnd, NULL, TRUE);
 							Sleep(3);
 						}
-						else if (toggle == 1 || bounce)
+						else if (toggle == 1)
 						{
 							slow = true;
 						}
@@ -675,13 +670,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				right = true;
 				left = false;
-				toggle = 1;
+				if (!collision)
+				{
+					toggle = 1;
+				}
 			}
 			else if (wParam == VK_LEFT)
 			{
 				left = true;
 				right = false;
-				toggle = 0;
+				if (!collision)
+				{
+					toggle = 0;
+				}
 			}
 
 			break;
