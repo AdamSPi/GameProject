@@ -52,7 +52,7 @@ int Squish = 0;
 int Squash = 0;
 int Squanch = 0;
 int frames = 0;
-BOOL bounce = false;
+BOOL bounce;
 
 // Entities
 static RECT Player;
