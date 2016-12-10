@@ -45,9 +45,6 @@ RECT * Collider();
 // Moves the entire world to keep the Player centered on the screen
 void WorldMove(Dir d);
 
-// Adds RECTs to list
-void InitRect(RECT ent);
-
 // List of collidables objects
 std::vector<RECT*> entities;
 
@@ -63,7 +60,7 @@ static RECT Ground;
 static RECT Wall1;
 static RECT Death;
 static RECT Platform1;
-
+static RECT * Pointy;
 // Physics flags
 BOOL collision = false;
 BOOL wall = false;
@@ -73,7 +70,6 @@ BOOL jump = false;
 // Movement flags
 BOOL right = false;
 BOOL left = false;
-BOOL canjump = false;
 
 // Movement speed flags
 BOOL fast;
@@ -182,13 +178,10 @@ void animation(HWND hWnd)
 				{
 					if (Squish != 0) { Squish--; Sleep(25); }
 					Squash++;
-					if (Player.bottom < Ground.top + 25 && Player.bottom > Ground.top)
+					if (CollisionCheck())
 					{
-						canjump = true;
-					}
-					else if (Player.bottom > Ground.top && Player.left < Ground.right && Player.right > Ground.left && Player.top < Ground.bottom)
-					{
-						Player.bottom = Ground.top;
+						Pointy = Collider();
+						Player.bottom = Pointy->top;
 						Player.top = Player.bottom - 35;
 						fall = false;
 						collision = true;
@@ -213,13 +206,10 @@ void animation(HWND hWnd)
 					if (frames < 20) { Sleep(6); }
 
 				}
-				if (Player.bottom < Ground.top +25 && Player.bottom > Ground.top)
+				if (CollisionCheck())
 				{
-					canjump = true;
-				}
-				else if (Player.bottom > Ground.top && Player.left < Ground.right && Player.right > Ground.left && Player.top < Ground.top)
-				{
-					Player.bottom = Ground.top;
+					Pointy = Collider();
+					Player.bottom = Pointy->top;
 					Player.top = Player.bottom - 35;
 					fall = false;
 					collision = true;
@@ -230,21 +220,21 @@ void animation(HWND hWnd)
 					{
 						Squash--;
 						Squish++;
-						Ground.top++;
-						Ground.bottom++;
+						Pointy->top++;
+						Pointy->bottom++;
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(5);
 					}
 					while (Squish != 0)
 					{
 						Squish--;
-						Ground.top--;
-						Ground.bottom--;
+						Pointy->top--;
+						Pointy->bottom--;
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(3);
 					}
-					Ground.top+=2;
-					Ground.bottom+=2;
+					Pointy->top+=2;
+					Pointy->bottom+=2;
 					Sleep(10);
 					break;
 				}
@@ -325,9 +315,9 @@ void animation(HWND hWnd)
 
 void movement(HWND hWnd)
 {
-	InitRect(Ground);
-	InitRect(Wall1);
-	InitRect(Platform1);
+	entities.push_back(&Ground);
+	entities.push_back(&Wall1);
+	entities.push_back(&Platform1);
 
 	while (run)
 	{
@@ -670,10 +660,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// wParam contains key code
 			if (wParam == VK_SPACE)
 			{
-				if (canjump)
+				if (collision)
 				{
 					jump = true;
-					canjump = false;
 				}
 			}
 			else if (wParam == VK_RIGHT)
@@ -724,6 +713,7 @@ BOOL CollisionCheck()
 		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->bottom)
 		{
 			return true;
+			break;
 		}
 	}
 	return false;
@@ -737,6 +727,7 @@ RECT * Collider()
 		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->bottom)
 		{
 			rect = entities[i];
+			break;
 		}
 	}
 	return rect;
@@ -767,9 +758,4 @@ void WorldMove(Dir d)
 			entities[i]->right++;
 		}
 	}
-}
-
-void InitRect(RECT ent)
-{
-	entities.push_back(&ent);
 }
