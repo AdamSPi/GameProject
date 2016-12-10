@@ -61,9 +61,9 @@ static RECT Wall1;
 static RECT Death;
 static RECT Platform1;
 static RECT * Pointy;
+
 // Physics flags
 BOOL collision = false;
-BOOL wall = false;
 BOOL fall = true;
 BOOL jump = false;
 
@@ -85,7 +85,7 @@ void animation(HWND hWnd)
 	while (run)
 	{
 
-		// update game logic here 
+		// DOWNdate game logic here 
 		// Jump animation
 		if (jump && collision && !fall)
 		{
@@ -108,8 +108,7 @@ void animation(HWND hWnd)
 
 				InvalidateRect(hWnd, NULL, TRUE); 
 				Sleep(1); 
-				Player.top--; 
-				Player.bottom--;
+				WorldMove(DOWN);
 
 				if (frames <= 50 )
 				{
@@ -117,15 +116,13 @@ void animation(HWND hWnd)
 					{
 						Squash++;
 						frames++;
-						Player.top--;
-						Player.bottom--;
+						WorldMove(DOWN);
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(1);
 						continue;
 					}
 					frames++;
-					Player.top--;
-					Player.bottom--;
+					WorldMove(DOWN);
 					InvalidateRect(hWnd, NULL, TRUE);
 					Sleep(1);
 					continue;
@@ -134,14 +131,12 @@ void animation(HWND hWnd)
 					while (Squash > 5)
 					{
 						Squash--;
-						Player.top--;
-						Player.bottom--;
+						WorldMove(DOWN);
 						frames++;
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(1);
 					}
-					Player.top--;
-					Player.bottom--;
+					WorldMove(DOWN);
 					frames++;
 					InvalidateRect(hWnd, NULL, TRUE);
 					Sleep(2);
@@ -154,8 +149,7 @@ void animation(HWND hWnd)
 			while (Squash != 0)
 			{
 				Squash--;
-				Player.top++;
-				Player.bottom++;
+				WorldMove(UP);
 				InvalidateRect(hWnd, NULL, TRUE);
 				Sleep(6);
 			}
@@ -200,8 +194,7 @@ void animation(HWND hWnd)
 						break;
 					}
 					frames++;
-					Player.top++;
-					Player.bottom++;
+					WorldMove(UP);
 					InvalidateRect(hWnd, NULL, TRUE);
 					if (frames < 20) { Sleep(6); }
 
@@ -216,31 +209,33 @@ void animation(HWND hWnd)
 					slow = false;
 					toggle = -1;
 					frames = 0;
+					int offset = 0;
 					while (Squash != 0)
 					{
 						Squash--;
 						Squish++;
-						Pointy->top++;
-						Pointy->bottom++;
+						WorldMove(DOWN);
+						offset++;
 						InvalidateRect(hWnd, NULL, TRUE);
-						Sleep(5);
+						Sleep(7);
 					}
 					while (Squish != 0)
 					{
 						Squish--;
-						Pointy->top--;
-						Pointy->bottom--;
+						WorldMove(UP);
+						offset--;
 						InvalidateRect(hWnd, NULL, TRUE);
-						Sleep(3);
+						Sleep(5);
 					}
-					Pointy->top+=2;
-					Pointy->bottom+=2;
-					Sleep(10);
+					while (offset != 0)
+					{
+						WorldMove(DOWN);
+						offset++;
+					}
 					break;
 				}
 				frames++;
-				Player.top++;
-				Player.bottom++;
+				WorldMove(UP);
 				InvalidateRect(hWnd, NULL, TRUE);
 				if (frames < 20) Sleep(6);
 				else if (frames < 70 && frames >= 20) {
@@ -248,8 +243,7 @@ void animation(HWND hWnd)
 					while (Squash < 7) {
 						Squash++;
 						frames++;
-						Player.top++;
-						Player.bottom++;
+						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(5);
 					}
@@ -261,8 +255,7 @@ void animation(HWND hWnd)
 					{
 						Squash++;
 						frames++;
-						Player.top++;
-						Player.bottom++;
+						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(4);
 					}
@@ -274,8 +267,7 @@ void animation(HWND hWnd)
 					{
 						Squash++;
 						frames++;
-						Player.top++;
-						Player.bottom++;
+						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(1);
 					}
@@ -321,10 +313,14 @@ void movement(HWND hWnd)
 
 	while (run)
 	{
-
+		
 		//RIGHT
-		if (right && !left && !wall)
+		if (right && !left)
 		{
+			if (CollisionCheck())
+			{
+				Pointy = Collider();
+			}
 			int temp = Player.right;
 			while (Player.right != (temp + 5))
 			{
@@ -333,33 +329,30 @@ void movement(HWND hWnd)
 				InvalidateRect(hWnd, NULL, TRUE);
 				Sleep(15);
 			}
-			while (!wall && right)
+			while (right)
 			{
-				if (collision && Player.left < Ground.right)
+				if (collision && Player.left < Pointy->right)
 				{
 					toggle = 1;
 					if (!fast)
 					{
-						Ground.left--;
-						Ground.right--;
+						WorldMove(RIGHT);
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(4);
 					}
 					else if(fast)
 					{
-						Ground.left--;
-						Ground.right--;
+						WorldMove(RIGHT);
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(3);
 					}
 				}
-				else if ((Player.bottom > Ground.top && Player.left < Ground.right && Player.right > Ground.left && Player.top < Ground.top) || (jump || fall) && !slow)
+				else if ((CollisionCheck()) || (jump || fall) && !slow)
 				{
 					while (!collision && !slow) {
 						if (toggle == 1)
 						{
-							Ground.left--;
-							Ground.right--;
+							WorldMove(RIGHT);
 							InvalidateRect(hWnd, NULL, TRUE);
 							Sleep(3);
 						}
@@ -369,17 +362,15 @@ void movement(HWND hWnd)
 						}
 					}
 				}
-				else if (!(Player.bottom > Ground.top && Player.left < Ground.right && Player.right > Ground.left && Player.top < Ground.top))
+				else if (!(CollisionCheck()))
 				{
-					Ground.left--;
-					Ground.right--;
+					WorldMove(RIGHT);
 					fall = true;
 					collision = false;
 					slow = true;
 					while (fall && right)
 					{
-						Ground.left--;
-						Ground.right--;
+						WorldMove(RIGHT);
 						Sleep(9);
 					}
 				}
@@ -395,8 +386,12 @@ void movement(HWND hWnd)
 		}
 
 		//LEFT
-		if (left && !right && !wall)
+		if (left && !right)
 		{
+			if (CollisionCheck())
+			{
+				Pointy = Collider();
+			}
 			int temp = Player.left;
 			while (Player.left != (temp - 5))
 			{
@@ -405,33 +400,30 @@ void movement(HWND hWnd)
 				InvalidateRect(hWnd, NULL, TRUE);
 				Sleep(15);
 			}
-			while (!wall && left)
+			while (left)
 			{
-				if (collision && Player.right > Ground.left)
+				if (collision && Player.right > Pointy->left)
 				{
 					toggle = 0;
 					if (!fast)
 					{
-						Ground.left++;
-						Ground.right++;
+						WorldMove(LEFT);
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(4);
 					}
 					else if (fast)
 					{
-						Ground.left++;
-						Ground.right++;
+						WorldMove(LEFT);
 						InvalidateRect(hWnd, NULL, TRUE);
 						Sleep(3);
 					}
 				}
-				else if ((Player.bottom > Ground.top && Player.left < Ground.right && Player.right > Ground.left && Player.top < Ground.top) || (jump || fall) && !slow)
+				else if ((CollisionCheck()) || (jump || fall) && !slow)
 				{
 					while (!collision && !slow) {
 						if (toggle == 0)
 						{
-							Ground.left++;
-							Ground.right++;
+							WorldMove(LEFT);
 							InvalidateRect(hWnd, NULL, TRUE);
 							Sleep(3);
 						}
@@ -441,17 +433,15 @@ void movement(HWND hWnd)
 						}
 					}
 				}
-				else if (!(Player.bottom > Ground.top && Player.left < Ground.right && Player.right > Ground.left && Player.top < Ground.top))
+				else if (!(CollisionCheck()))
 				{
-					Ground.left++;
-					Ground.right++;
+					WorldMove(LEFT);
 					fall = true;
 					collision = false;
 					slow = true;
 					while (fall && left)
 					{
-						Ground.left++;
-						Ground.right++;
+						WorldMove(LEFT);
 						Sleep(9);
 					}
 				}
@@ -621,14 +611,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			*/
 
 			Player.left = 482;
-			Player.top = -35;
-			Player.bottom = 0;
+			Player.top = 382;
+			Player.bottom = 418;
 			Player.right = 518;
 
 			Ground.left = 0;
-			Ground.top = HEIGHT - 400;
+			Ground.top = HEIGHT;
 			Ground.right = WIDTH;
-			Ground.bottom = HEIGHT-200;
+			Ground.bottom = HEIGHT+200;
+
+			Wall1.left = Ground.left;
+			Wall1.top = Ground.top - 250;
+			Wall1.right = Wall1.left + 100;
+			Wall1.bottom = Ground.top;
 
 			break;
 		}
@@ -649,6 +644,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				Ground.top,	    
 				Ground.right,   
 				Ground.bottom);	
+
+			Rectangle(hdc,
+				Wall1.left,
+				Wall1.top,
+				Wall1.right,
+				Wall1.bottom
+			);
                                 
 			EndPaint(hWnd, &ps);
 
@@ -710,7 +712,7 @@ BOOL CollisionCheck()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->bottom)
+		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
 		{
 			return true;
 			break;
@@ -721,10 +723,10 @@ BOOL CollisionCheck()
 
 RECT * Collider()
 {
-	RECT * rect = NULL;
+	RECT * rect = &Death;
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->bottom)
+		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
 		{
 			rect = entities[i];
 			break;
@@ -749,13 +751,13 @@ void WorldMove(Dir d)
 		}
 		else if (d == LEFT)
 		{
-			entities[i]->left--;
-			entities[i]->right--;
+			entities[i]->left++;
+			entities[i]->right++;
 		}
 		else if (d == RIGHT)
 		{
-			entities[i]->left++;
-			entities[i]->right++;
+			entities[i]->left--;
+			entities[i]->right--;
 		}
 	}
 }
