@@ -37,8 +37,10 @@ int HEIGHT = 800;
 // Forward declarations of functions included in this code module:  
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-// Returns true when Player is colliding with anything that is collidable
-BOOL CollisionCheck();
+// Returns true when Player is landed on anything that is collidable
+BOOL LandCheck();
+// Returns true when Player is against anything that is collidable
+BOOL WallCheck();
 // Returns pointer to object collided with
 RECT * Collider();
 
@@ -166,13 +168,13 @@ void animation(HWND hWnd)
 		// Falling condition
 		if (fall && !collision)
 		{
-			while (!collision)
+			while (!collision && !WallCheck())
 			{
 				while (Squash < 4)
 				{
 					if (Squish != 0) { Squish--; Sleep(25); }
 					Squash++;
-					if (CollisionCheck())
+					if (LandCheck())
 					{
 						Pointy = Collider();
 						Player.bottom = Pointy->top;
@@ -199,7 +201,7 @@ void animation(HWND hWnd)
 					if (frames < 20) { Sleep(6); }
 
 				}
-				if (CollisionCheck())
+				if (LandCheck())
 				{
 					Pointy = Collider();
 					Player.bottom = Pointy->top;
@@ -274,19 +276,23 @@ void animation(HWND hWnd)
 				}
 				else Sleep(1); frames++;
 			}
+			if (WallCheck())
+			{
+				//while()
+			}
 		}
 
 		// Walk animation
-		if (left || right && !jump)
+		if (left || right && !jump && !WallCheck())
 		{
-			while (Squanch < 5 && !jump)
+			while (Squanch < 5 && !jump && !WallCheck())
 			{
 				Squanch++;
 				fast = true;
 				InvalidateRect(hWnd, NULL, TRUE);
 				Sleep(30);
 			}
-			while (Squanch >= 0 && !jump)
+			while (Squanch >= 0 && !jump && !WallCheck())
 			{
 				fast = false;
 				Squanch--;
@@ -317,7 +323,7 @@ void movement(HWND hWnd)
 		//RIGHT
 		if (right && !left)
 		{
-			if (CollisionCheck())
+			if (LandCheck())
 			{
 				Pointy = Collider();
 			}
@@ -331,7 +337,7 @@ void movement(HWND hWnd)
 			}
 			while (right)
 			{
-				if (collision && Player.left < Pointy->right)
+				if ((collision && Player.left < Pointy->right) && !WallCheck())
 				{
 					toggle = 1;
 					if (!fast)
@@ -347,10 +353,10 @@ void movement(HWND hWnd)
 						Sleep(3);
 					}
 				}
-				else if ((CollisionCheck()) || (jump || fall) && !slow)
+				else if (((LandCheck()) || (jump || fall) && !slow) && !WallCheck())
 				{
 					while (!collision && !slow) {
-						if (toggle == 1)
+						if (toggle == 1 && !WallCheck())
 						{
 							WorldMove(RIGHT);
 							InvalidateRect(hWnd, NULL, TRUE);
@@ -362,13 +368,13 @@ void movement(HWND hWnd)
 						}
 					}
 				}
-				else if (!(CollisionCheck()))
+				else if (!(LandCheck()) && !WallCheck())
 				{
 					WorldMove(RIGHT);
 					fall = true;
 					collision = false;
 					slow = true;
-					while (fall && right)
+					while ((fall && right) && !WallCheck())
 					{
 						WorldMove(RIGHT);
 						Sleep(9);
@@ -388,7 +394,7 @@ void movement(HWND hWnd)
 		//LEFT
 		if (left && !right)
 		{
-			if (CollisionCheck())
+			if (LandCheck())
 			{
 				Pointy = Collider();
 			}
@@ -402,7 +408,7 @@ void movement(HWND hWnd)
 			}
 			while (left)
 			{
-				if (collision && Player.right > Pointy->left)
+				if ((collision && Player.right > Pointy->left) && !WallCheck())
 				{
 					toggle = 0;
 					if (!fast)
@@ -418,9 +424,9 @@ void movement(HWND hWnd)
 						Sleep(3);
 					}
 				}
-				else if ((CollisionCheck()) || (jump || fall) && !slow)
+				else if (((LandCheck()) || (jump || fall) && !slow) && !WallCheck())
 				{
-					while (!collision && !slow) {
+					while ((!collision && !slow) && !WallCheck()) {
 						if (toggle == 0)
 						{
 							WorldMove(LEFT);
@@ -433,13 +439,13 @@ void movement(HWND hWnd)
 						}
 					}
 				}
-				else if (!(CollisionCheck()))
+				else if (!(LandCheck()) && !WallCheck())
 				{
 					WorldMove(LEFT);
 					fall = true;
 					collision = false;
 					slow = true;
-					while (fall && left)
+					while ((fall && left) && !WallCheck())
 					{
 						WorldMove(LEFT);
 						Sleep(9);
@@ -623,7 +629,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			Wall1.left = Ground.left;
 			Wall1.top = Ground.top - 250;
 			Wall1.right = Wall1.left + 100;
-			Wall1.bottom = Ground.top;
+			Wall1.bottom = Ground.top+1;
 
 			break;
 		}
@@ -708,11 +714,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-BOOL CollisionCheck()
+BOOL LandCheck()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
+		if (Player.bottom > entities[i]->top && Player.left <= entities[i]->right && Player.right >= entities[i]->left && Player.top < entities[i]->top)
+		{                                                                                                                                        
+			return true;                                                                                                                         
+			break;                                                                                                                               
+		}                                                                                                                                        
+	}                                                                                                                                            
+	return false;                                                                                                                                
+}
+
+BOOL WallCheck()
+{
+	for (int i = 0; i < entities.size(); i++)
+	{
+		if (Player.bottom <= entities[i]->bottom && Player.left <= entities[i]->right && Player.right >= entities[i]->left && Player.top >= entities[i]->top)
 		{
 			return true;
 			break;
@@ -721,11 +740,12 @@ BOOL CollisionCheck()
 	return false;
 }
 
-RECT * Collider()
-{
-	RECT * rect = &Death;
-	for (int i = 0; i < entities.size(); i++)
-	{
+                                                                                                                                                 
+RECT * Collider()                                                                                                                                
+{                                                                                                                                                
+	RECT * rect = &Death;                                                                                                                        
+	for (int i = 0; i < entities.size(); i++)                                                                                                    
+	{                                                                                                                                            
 		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
 		{
 			rect = entities[i];
