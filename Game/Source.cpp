@@ -9,7 +9,8 @@
 #include <tchar.h>  
 #include <thread> 
 #include <atomic> 
-#include <list> 
+#include <list>
+#include <vector>
 // Global variables  
 
 enum Dir
@@ -17,7 +18,7 @@ enum Dir
 	UP,
 	DOWN,
 	LEFT,
-	Right
+	RIGHT
 };
 
 // The main window class name.  
@@ -44,8 +45,11 @@ RECT * Collider();
 // Moves the entire world to keep the Player centered on the screen
 void WorldMove(Dir d);
 
+// Adds RECTs to list
+void InitRect(RECT ent);
+
 // List of collidables objects
-std::list<RECT> collidables;
+std::vector<RECT*> entities;
 
 // Animation modifiers
 int Squish = 0;
@@ -56,6 +60,9 @@ int frames = 0;
 // Entities
 static RECT Player;
 static RECT Ground;
+static RECT Wall1;
+static RECT Death;
+static RECT Platform1;
 
 // Physics flags
 BOOL collision = false;
@@ -318,6 +325,9 @@ void animation(HWND hWnd)
 
 void movement(HWND hWnd)
 {
+	InitRect(Ground);
+	InitRect(Wall1);
+	InitRect(Platform1);
 
 	while (run)
 	{
@@ -329,7 +339,7 @@ void movement(HWND hWnd)
 			while (Player.right != (temp + 5))
 			{
 				Player.right++;
-				Player.left++;
+				//Player.left++;
 				InvalidateRect(hWnd, NULL, TRUE);
 				Sleep(15);
 			}
@@ -388,7 +398,7 @@ void movement(HWND hWnd)
 			while (Player.right != temp)
 			{
 				Player.right--;
-				Player.left--;
+				//Player.left--;
 				InvalidateRect(hWnd, NULL, TRUE);
 				Sleep(10);
 			}
@@ -401,7 +411,7 @@ void movement(HWND hWnd)
 			while (Player.left != (temp - 5))
 			{
 				Player.left--;
-				Player.right--;
+				//Player.right--;
 				InvalidateRect(hWnd, NULL, TRUE);
 				Sleep(15);
 			}
@@ -460,7 +470,7 @@ void movement(HWND hWnd)
 			while (Player.left != temp)
 			{
 				Player.left++;
-				Player.right++;
+				//Player.right++;
 				InvalidateRect(hWnd, NULL, TRUE);
 				Sleep(10);
 			}
@@ -709,16 +719,57 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 BOOL CollisionCheck()
 {
+	for (int i = 0; i < entities.size(); i++)
+	{
+		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->bottom)
+		{
+			return true;
+		}
+	}
 	return false;
 }
 
 RECT * Collider()
 {
 	RECT * rect = NULL;
+	for (int i = 0; i < entities.size(); i++)
+	{
+		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->bottom)
+		{
+			rect = entities[i];
+		}
+	}
 	return rect;
 }
 
 void WorldMove(Dir d)
 {
-	//....
+	for (int i = 0; i < entities.size(); i++)
+	{
+		if (d == UP)
+		{
+			entities[i]->top--;
+			entities[i]->bottom--;
+		}
+		else if (d == DOWN)
+		{
+			entities[i]->top++;
+			entities[i]->bottom++;
+		}
+		else if (d == LEFT)
+		{
+			entities[i]->left--;
+			entities[i]->right--;
+		}
+		else if (d == RIGHT)
+		{
+			entities[i]->left++;
+			entities[i]->right++;
+		}
+	}
+}
+
+void InitRect(RECT ent)
+{
+	entities.push_back(&ent);
 }
