@@ -73,7 +73,6 @@ BOOL collision = false;
 BOOL fall = true;
 BOOL jump = false;
 BOOL glide = false;
-bool wall = false;
 
 // Movement flags
 BOOL right = false;
@@ -145,7 +144,6 @@ void animation(HWND hWnd)
 		{
 			while (frames < 100 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 			{
-				wall = true;
 				Squish = 0;
 				while (Squish <= 6 && frames < 1)
 				{
@@ -167,7 +165,6 @@ void animation(HWND hWnd)
 
 					if (frames <= 50)
 					{
-						collision = false;
 						if (Squash < 8)
 						{
 							Squash++;
@@ -186,6 +183,7 @@ void animation(HWND hWnd)
 					if (frames <= 80 && frames > 50) {
 						while (Squash > 5)
 						{
+							collision = false;
 							Squash--;
 							WorldMove(DOWN);
 							frames++;
@@ -261,9 +259,10 @@ void animation(HWND hWnd)
 					frames = 0;
 					slow = false;
 					slower = false;
-					while (!LandCheck() && left && !jump && wall)
+					collision = true;
+					while (!LandCheck() && left && !jump)
 					{
-						while (Squash != 4)
+						while (Squash != 4 && !jump)
 						{
 							if (Squish != 0)
 							{
@@ -278,7 +277,6 @@ void animation(HWND hWnd)
 							WorldMove(UP);
 							Sleep(10);
 						}
-						collision = true;
 						fall = false;
 						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
@@ -295,6 +293,12 @@ void animation(HWND hWnd)
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(10);
 					}
+					if (!jump)
+					{
+						Squash = 0;
+						collision = false;
+						fall = true;
+					}
 				}
 				if (right && WallCheckRight() && !LandCheck())
 				{
@@ -302,9 +306,10 @@ void animation(HWND hWnd)
 					frames = 0;
 					slow = false;
 					slower = false;
-					while (!LandCheck() && right && !jump && wall)
+					collision = true;
+					while (!LandCheck() && right && !jump)
 					{
-						while (Squash != 4)
+						while (Squash != 4 && !jump)
 						{
 							if (Squish != 0)
 							{
@@ -319,7 +324,7 @@ void animation(HWND hWnd)
 							WorldMove(UP);
 							Sleep(10);
 						}
-						collision = true;
+						
 						fall = false;
 						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
@@ -336,13 +341,14 @@ void animation(HWND hWnd)
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
 					}
+					if (!jump)
+					{
+						Squash = 0;
+						collision = false;
+						fall = true;
+					}
 				}
-				if (!jump)
-				{
-					Squash = 0;
-					collision = false;
-					fall = true;
-				}
+				
 			}
 
 			//-----------------------------------------------------------------------------\\
@@ -391,6 +397,7 @@ void animation(HWND hWnd)
 						if (frames <= 80 && frames > 50) {
 							while (Squash > 5)
 							{
+								collision = false;
 								Squash--;
 								WorldMove(DOWN);
 								frames++;
@@ -453,7 +460,7 @@ void animation(HWND hWnd)
 
 			//-----------------------------------------------------------------------------\\
 
-			while (!collision && !((left&&WallCheckLeft())||(right&&WallCheckRight())))
+			while (!collision && !((left && WallCheckLeft())||(right && WallCheckRight())))
 			{
 				while (Squash < 4)
 				{
@@ -463,7 +470,6 @@ void animation(HWND hWnd)
 					WorldMove(UP);
 					InvalidateRect(hWnd, NULL, FALSE);
 					if (frames < 20) { Sleep(7); }
-
 				}
 				if (LandCheck())
 				{
@@ -471,7 +477,6 @@ void animation(HWND hWnd)
 					collision = true;
 					slow = false;
 					slower = false;
-					wall = false;
 					toggle = -1;
 					frames = 0;
 					int offset = 0;
@@ -540,7 +545,6 @@ void animation(HWND hWnd)
 					{
 						slower = true;
 						slow = false;
-						wall = false;
 					}
 					while (Squash <= 9)
 					{
@@ -617,6 +621,7 @@ void animation(HWND hWnd)
 					fall = false;
 					collision = true;
 					slow = false;
+					slower = false;
 					toggle = -1;
 					frames = 0;
 					int offset = 0;
@@ -1095,7 +1100,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				if (collision)
 				{
-					jump = true;
+					for(int i=0; i <60;i++) jump = true;
 				}
 			}
 			else if (wParam == VK_RIGHT || wParam == 0x44)
@@ -1147,7 +1152,7 @@ BOOL LandCheck()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom == entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
+		if (Player.bottom >= entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
 		{
 			Pointy = entities[i];
 			return true;                                                                                                                          
@@ -1172,7 +1177,7 @@ BOOL WallCheckLeft()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom == entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top) { continue; }
+		if (Player.bottom >= entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top) { continue; }
 		else if (((Player.bottom < entities[i]->bottom && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top > entities[i]->top)
 			|| (Player.bottom > entities[i]->bottom && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top < entities[i]->bottom)
 			|| (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top < entities[i]->top))
@@ -1188,7 +1193,7 @@ BOOL WallCheckRight()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom == entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top) { continue; }
+		if (Player.bottom >= entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top) { continue; }
 		else if (((Player.bottom < entities[i]->bottom && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top > entities[i]->top)
 			|| (Player.bottom > entities[i]->bottom && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top < entities[i]->bottom)
 			|| (Player.bottom > entities[i]->top && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top < entities[i]->top))
