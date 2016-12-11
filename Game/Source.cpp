@@ -25,7 +25,7 @@ enum Dir
 static TCHAR szWindowClass[] = _T("win32app");
 
 // The string that appears in the application's title bar.  
-static TCHAR szTitle[] = _T("Bounce Box");
+static TCHAR szTitle[] = _T("Super Tofu Boy");
 
 HINSTANCE hInst;
 DWORD FIXED_SIZED_WINDOW = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
@@ -73,6 +73,7 @@ BOOL collision = false;
 BOOL fall = true;
 BOOL jump = false;
 BOOL glide = false;
+bool wall = false;
 
 // Movement flags
 BOOL right = false;
@@ -142,8 +143,9 @@ void animation(HWND hWnd)
 		// Jump animation
 		if (jump && collision)
 		{
-			while (frames < 100)
+			while (frames < 100 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 			{
+				wall = true;
 				Squish = 0;
 				while (Squish <= 6 && frames < 1)
 				{
@@ -157,7 +159,7 @@ void animation(HWND hWnd)
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(6);
 				}
-				if (!WallCheckTop() || !!(WallCheckLeft() || WallCheckRight()))
+				if (!WallCheckTop())
 				{
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(1);
@@ -204,7 +206,7 @@ void animation(HWND hWnd)
 				}
 				else break;
 			}
-			while (!(WallCheckLeft() || WallCheckRight()))
+			while (!WallCheckTop())
 			{
 				Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); WorldMove(DOWN);
 				while (Squash != 0)
@@ -252,13 +254,14 @@ void animation(HWND hWnd)
 			// Wall jumping
 			if ((left || right))
 			{
+				
 				if (left && WallCheckLeft() && !LandCheck())
 				{
 					Squanch = 0;
 					frames = 0;
 					slow = false;
 					slower = false;
-					while (!LandCheck() && left && !jump)
+					while (!LandCheck() && left && !jump && wall)
 					{
 						while (Squash != 4)
 						{
@@ -299,7 +302,7 @@ void animation(HWND hWnd)
 					frames = 0;
 					slow = false;
 					slower = false;
-					while (!LandCheck() && right && !jump)
+					while (!LandCheck() && right && !jump && wall)
 					{
 						while (Squash != 4)
 						{
@@ -361,7 +364,7 @@ void animation(HWND hWnd)
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(6);
 					}
-					if (!WallCheckTop() || !!(WallCheckLeft() || WallCheckRight()))
+					if (!WallCheckTop() && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 					{
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
@@ -408,7 +411,7 @@ void animation(HWND hWnd)
 					}
 					else break;
 				}
-				while (!(WallCheckLeft() || WallCheckRight()))
+				while (!WallCheckTop())
 				{
 					Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); WorldMove(DOWN);
 					while (Squash != 0)
@@ -468,6 +471,7 @@ void animation(HWND hWnd)
 					collision = true;
 					slow = false;
 					slower = false;
+					wall = false;
 					toggle = -1;
 					frames = 0;
 					int offset = 0;
@@ -536,6 +540,7 @@ void animation(HWND hWnd)
 					{
 						slower = true;
 						slow = false;
+						wall = false;
 					}
 					while (Squash <= 9)
 					{
@@ -569,14 +574,9 @@ void animation(HWND hWnd)
 			}
 		}
 
-
-
-
-
-
 		//**************************************************************************************************************************\\
 
-				// Walk animation
+		// Walk animation
 		if ((left || right) && !jump && !(WallCheckRight() || WallCheckLeft()) && !fall)
 		{
 			while (Squanch < 5 && !jump && !(WallCheckRight() || WallCheckLeft()) && !fall)
@@ -596,11 +596,6 @@ void animation(HWND hWnd)
 		}
 		else { while (Squanch != -1) { Squanch--; InvalidateRect(hWnd, NULL, FALSE); Sleep(30); } }
 
-		// draw game
-		InvalidateRect(hWnd, NULL, FALSE);
-
-		// update resolution 
-		//Sleep(20);top++
 		}
 		else
 		{
@@ -862,9 +857,6 @@ void movement(HWND hWnd)
 				}
 			}
 		}
-
-		// draw game
-		InvalidateRect(hWnd, NULL, FALSE);
 
 		// update resolution 
 		//Sleep(20);
@@ -1180,7 +1172,7 @@ BOOL WallCheckLeft()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom >= entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top) { continue; }
+		if (Player.bottom == entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top) { continue; }
 		else if (((Player.bottom < entities[i]->bottom && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top > entities[i]->top)
 			|| (Player.bottom > entities[i]->bottom && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top < entities[i]->bottom)
 			|| (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top < entities[i]->top))
@@ -1196,7 +1188,7 @@ BOOL WallCheckRight()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom >= entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top) { continue; }
+		if (Player.bottom == entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top) { continue; }
 		else if (((Player.bottom < entities[i]->bottom && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top > entities[i]->top)
 			|| (Player.bottom > entities[i]->bottom && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top < entities[i]->bottom)
 			|| (Player.bottom > entities[i]->top && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top < entities[i]->top))
