@@ -42,6 +42,7 @@ BOOL LandCheck();
 // Returns true when Player is against anything that is collidable
 BOOL WallCheckLeft();
 BOOL WallCheckRight();
+BOOL WallCheckTop();
 
 // Moves the entire world to keep the Player centered on the screen
 void WorldMove(Dir d);
@@ -59,13 +60,14 @@ int frames = 0;
 static RECT Player;
 static RECT Ground;
 static RECT Wall1;
+static RECT Wall2;
+static RECT Wall3;
 static RECT Death;
 static RECT Platform1;
-static RECT Wall2;
 
-// Pointers
+
+// Pointer
 static RECT * Pointy;
-static RECT * WallPointy;
 
 // Physics flags
 BOOL collision = false;
@@ -95,8 +97,8 @@ void animation(HWND hWnd)
 		// Jump animation
 		if (jump && collision)
 		{
-			collision = false;
-			while (frames < 100) // jump 100 frames high
+			
+			while (frames < 100)
 			{
 				Squish = 0;
 				while (Squish <= 6 && frames < 1)
@@ -111,46 +113,75 @@ void animation(HWND hWnd)
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(6);
 				}
-
-				InvalidateRect(hWnd, NULL, FALSE); 
-				Sleep(1); 
-				WorldMove(DOWN);
-
-				if (frames <= 50 )
+				if (!WallCheckTop() || !!(WallCheckLeft() || WallCheckRight()))
 				{
-					if (Squash < 8)
+					InvalidateRect(hWnd, NULL, FALSE);
+					Sleep(1);
+					WorldMove(DOWN);
+
+					if (frames <= 50)
 					{
-						Squash++;
+						collision = false;
+						if (Squash < 8)
+						{
+							Squash++;
+							frames++;
+							WorldMove(DOWN);
+							InvalidateRect(hWnd, NULL, FALSE);
+							Sleep(1);
+							continue;
+						}
 						frames++;
 						WorldMove(DOWN);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
 						continue;
 					}
-					frames++;
-					WorldMove(DOWN);
-					InvalidateRect(hWnd, NULL, FALSE);
-					Sleep(1);
-					continue;
-				}
-				if (frames <= 80 && frames > 50) {
-					while (Squash > 5)
-					{
-						Squash--;
+					if (frames <= 80 && frames > 50) {
+						while (Squash > 5)
+						{
+							Squash--;
+							WorldMove(DOWN);
+							frames++;
+							InvalidateRect(hWnd, NULL, FALSE);
+							Sleep(2);
+						}
 						WorldMove(DOWN);
 						frames++;
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(2);
 					}
-					WorldMove(DOWN);
-					frames++;
-					InvalidateRect(hWnd, NULL, FALSE);
-					Sleep(2);
+					else if (frames <= 100 && frames > 80) {
+						glide = true; Sleep(4); while (Squash > 3)
+						{
+							Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); WorldMove(DOWN);
+						}frames++;
+					}
 				}
-				else if (frames <= 100 && frames > 80) {glide = true; Sleep(4); while (Squash > 3)
-				{ Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); Player.top--;Player.bottom--;}frames++;}
+				else break;
 			}
-			
+			while (!(WallCheckLeft() || WallCheckRight()))
+			{
+				Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); WorldMove(DOWN);
+				while (Squash != 0)
+				{
+					if(Squash > 0)Squash--;
+					else Squash++;
+					Squish++;
+					WorldMove(DOWN);
+					InvalidateRect(hWnd, NULL, FALSE);
+					Sleep(10);
+				}
+				while (Squish != 0)
+				{
+					if(Squish > 0) Squish--;
+					else Squish++;
+					WorldMove(UP);
+					InvalidateRect(hWnd, NULL, FALSE);
+					Sleep(10);
+				}
+				break;
+			}
 			frames = 0; // reset
 			while (Squash != 0)
 			{
@@ -200,6 +231,7 @@ void animation(HWND hWnd)
 						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(15);
+						if (!WallCheckLeft()) break;
 					}
 					while (Squash != 0)
 					{
@@ -208,7 +240,7 @@ void animation(HWND hWnd)
 						Sleep(10);
 					}
 				}
-				else if (right && WallCheckRight())
+				if (right && WallCheckRight())
 				{
 					Squanch = 0;
 					while (!LandCheck() && right && !jump)
@@ -231,6 +263,7 @@ void animation(HWND hWnd)
 						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(15);
+						if (!WallCheckRight()) break;
 					}
 					while (Squash != 0)
 					{
@@ -382,6 +415,8 @@ void movement(HWND hWnd)
 {
 	entities.push_back(&Ground);
 	entities.push_back(&Wall1);
+	entities.push_back(&Wall2);
+	entities.push_back(&Wall3);
 	entities.push_back(&Platform1);
 
 	while (run)
@@ -414,14 +449,14 @@ void movement(HWND hWnd)
 				}
 				else if (((LandCheck()) || ((jump || fall) && !slow)) && !WallCheckRight())
 				{
-					while (!collision && !slow) {
+					while ((!collision && !slow) && !WallCheckRight()) {
 						if (glide && toggle == 1)
 						{
 							WorldMove(RIGHT);
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(2);
 						}
-						else if (toggle == 1 && !WallCheckRight())
+						else if (toggle == 1)
 						{
 							WorldMove(RIGHT);
 							InvalidateRect(hWnd, NULL, FALSE);
@@ -452,7 +487,6 @@ void movement(HWND hWnd)
 						}
 					}
 				}
-				
 			}
 		}
 
@@ -521,7 +555,6 @@ void movement(HWND hWnd)
 						}
 					}
 				}
-				
 			}
 		}
 
@@ -702,6 +735,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			Wall1.right = Wall1.left + 100;
 			Wall1.bottom = Ground.top+1;
 
+			Wall2.left = Wall1.left+200;
+			Wall2.top = Wall1.top-250;
+			Wall2.right = Wall2.left + 100;
+			Wall2.bottom = Wall1.top;
+
+			Wall3.left = Ground.right-100;
+			Wall3.top = Ground.top - 250;
+			Wall3.right = Ground.right;
+			Wall3.bottom = Ground.top + 1;
+
 			break;
 		}
 		case WM_PAINT:
@@ -734,6 +777,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				Wall1.right,
 				Wall1.bottom
 			);
+
+			Rectangle(hdcMem,
+				Wall2.left,
+				Wall2.top,
+				Wall2.right,
+				Wall2.bottom);
+
+			Rectangle(hdcMem,
+				Wall3.left,
+				Wall3.top,
+				Wall3.right,
+				Wall3.bottom);
 
 			// Transfer the off-screen DC to the screen
 			BitBlt(hdc, 0, 0, WIDTH, HEIGHT, hdcMem, 0, 0, SRCCOPY);
@@ -806,7 +861,7 @@ BOOL LandCheck()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom > entities[i]->top && Player.left <= entities[i]->right && Player.right >= entities[i]->left && Player.top < entities[i]->top)
+		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
 		{
 			Pointy = entities[i];
 			return true;                                                                                                                         
@@ -816,13 +871,25 @@ BOOL LandCheck()
 	return false;                                                                                                                                
 }
 
+BOOL WallCheckTop()
+{
+	for (int i = 0; i < entities.size(); i++)
+	{
+		if (Player.top < entities[i]->bottom && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.bottom > entities[i]->bottom)
+		{
+			return true;
+			break;
+		}
+	}
+	return false;
+}
+
 BOOL WallCheckLeft()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom <= entities[i]->bottom && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top >= entities[i]->top)
+		if (Player.bottom < entities[i]->bottom && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top > entities[i]->top)
 		{
-			WallPointy = entities[i];
 			return true;
 			break;
 		}
@@ -834,9 +901,8 @@ BOOL WallCheckRight()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom <= entities[i]->bottom && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top >= entities[i]->top)
+		if (Player.bottom < entities[i]->bottom && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top > entities[i]->top)
 		{
-			WallPointy = entities[i];
 			return true;
 			break;
 		}
