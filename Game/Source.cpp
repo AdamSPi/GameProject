@@ -42,8 +42,6 @@ BOOL LandCheck();
 // Returns true when Player is against anything that is collidable
 BOOL WallCheckLeft();
 BOOL WallCheckRight();
-// Returns pointer to object collided with
-RECT * Collider();
 
 // Moves the entire world to keep the Player centered on the screen
 void WorldMove(Dir d);
@@ -63,6 +61,9 @@ static RECT Ground;
 static RECT Wall1;
 static RECT Death;
 static RECT Platform1;
+static RECT Wall2;
+
+// Pointers
 static RECT * Pointy;
 static RECT * WallPointy;
 
@@ -79,10 +80,12 @@ BOOL left = false;
 // Movement speed flags
 BOOL fast;
 BOOL slow;
+BOOL slower;
 int toggle = -1;
 
-
 BOOL run;
+
+//***********************************************************************************************************\\
 
 void animation(HWND hWnd)
 {
@@ -166,184 +169,185 @@ void animation(HWND hWnd)
 			fall = true;
 		}
 
+//**************************************************************************************************************************\\
 
 		// Falling condition
 		if (fall && !collision)
 		{
 			// Wall jumping
-			if ((left || right) && (WallCheckRight() || WallCheckLeft()))
+			if ((left || right))
 			{
 				if (left && WallCheckLeft())
 				{
-					int temp = Player.left;
-					while (!LandCheck() && !right && left)
+					Squanch = 0;
+					while (!LandCheck() && left && !jump)
 					{
-						while (Squash == 10)
+						while (Squash != 4)
 						{
+							if (Squish != 0)
+							{
+								Squish--;
+							}
 							Squash++;
 							InvalidateRect(hWnd, NULL, FALSE);
 							collision = true;
 							fall = false;
 							WorldMove(UP);
-							Sleep(7);
+							Sleep(10);
 						}
-						while (Player.left != WallPointy->right)
-						{
-							Player.left--;
-							InvalidateRect(hWnd, NULL, FALSE);
-							collision = true;
-							fall = false;
-							WorldMove(UP);
-							Sleep(7);
-						}
-						Squish = 0;
-						Squanch = 0;
 						collision = true;
 						fall = false;
 						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
-						Sleep(20);
+						Sleep(15);
 					}
-					while (Squash != 0 && Player.left != temp)
+					while (Squash != 0)
 					{
 						if(Squash!=0) Squash--;
-						if(Player.left!=temp)Player.left++;
 						InvalidateRect(hWnd, NULL, FALSE);
-						Sleep(5);
+						Sleep(10);
 					}
 				}
 				else if (right && WallCheckRight())
 				{
-					while (!LandCheck() && !left && right)
+					Squanch = 0;
+					while (!LandCheck() && right && !jump)
 					{
-						Squash = 10;
-						Squish = 0;
-						Squanch = 0;
+						while (Squash != 4)
+						{
+							if (Squish != 0)
+							{
+								Squish--;
+							}
+							Squash++;
+							InvalidateRect(hWnd, NULL, FALSE);
+							collision = true;
+							fall = false;
+							WorldMove(UP);
+							Sleep(10);
+						}
 						collision = true;
 						fall = false;
 						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
-						Sleep(20);
+						Sleep(15);
+					}
+					while (Squash != 0)
+					{
+						if (Squash != 0) Squash--;
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(1);
 					}
 				}
-
-				Squash = 0;
-				collision = false;
-				fall = true;
+				if (!jump)
+				{
+					Squash = 0;
+					collision = false;
+					fall = true;
+				}
 			}
+//-----------------------------------------------------------------------------\\
+
 			while (!collision)
 			{
-				while (Squash < 4)
+				while (Squash < 4 )
 				{
 					if (Squish != 0) { Squish--; Sleep(10); }
 					Squash++;
-					if (LandCheck())
-					{
-						Pointy = Collider();
-						Player.bottom = Pointy->top;
-						Player.top = Player.bottom - 36;
-						fall = false;
-						collision = true;
-						slow = false;
-						toggle = -1;
-						frames = 0;
-						while (Squash != 0)
-						{
-							Squash--;
-							Squish++;
-							InvalidateRect(hWnd, NULL, FALSE);
-							Sleep(5);
-						}
-						Squish = 0;
-						Sleep(10);
-						break;
-					}
 					frames++;
 					WorldMove(UP);
 					InvalidateRect(hWnd, NULL, FALSE);
 					if (frames < 20) { Sleep(5); }
 
 				}
-				
-				if (LandCheck())
-				{
-					Pointy = Collider();
-					Player.bottom = Pointy->top;
-					Player.top = Player.bottom - 36;
-					Player.left = Player.right - 36;
-					fall = false;
-					collision = true;
-					slow = false;
-					toggle = -1;
-					frames = 0;
-					int offset = 0;
-					while (Squash != 0)
+					if (LandCheck())
 					{
-						Squash--;
-						Squish++;
-						WorldMove(DOWN);
-						offset++;
-						InvalidateRect(hWnd, NULL, FALSE);
-						Sleep(7);
+						fall = false;
+						collision = true;
+						slow = false;
+						toggle = -1;
+						frames = 0;
+						int offset = 0;
+						while (Squash != 0)
+						{
+							Squash--;
+							Squish++;
+							WorldMove(DOWN);
+							offset++;
+							InvalidateRect(hWnd, NULL, FALSE);
+							Sleep(7);
+						}
+						while (Squish != 0)
+						{
+							Squish--;
+							WorldMove(UP);
+							offset--;
+							InvalidateRect(hWnd, NULL, FALSE);
+							Sleep(5);
+						}
+						while (offset != 0)
+						{
+							WorldMove(DOWN);
+							offset++;
+						}
+						Player.bottom = Pointy->top;
+						Player.top = Player.bottom - 36;
+						Player.left = Player.right - 36;
+						Player.right = Player.left + 36;
+						break;
 					}
-					while (Squish != 0)
-					{
-						Squish--;
-						WorldMove(UP);
-						offset--;
-						InvalidateRect(hWnd, NULL, FALSE);
-						Sleep(5);
-					}
-					while (offset != 0)
-					{
-						WorldMove(DOWN);
-						offset++;
-					}
-					break;
-				}
-				frames++;
-				WorldMove(UP);
-				InvalidateRect(hWnd, NULL, FALSE);
-				if (frames < 20) Sleep(3);
-				else if (frames < 70 && frames >= 20) {
-					glide = false;
-					Sleep(2);
-					while (Squash < 7) {
-						Squash++;
-						frames++;
-						WorldMove(UP);
-						InvalidateRect(hWnd, NULL, FALSE);
+					frames++;
+					WorldMove(UP);
+					InvalidateRect(hWnd, NULL, FALSE);
+					if (frames < 20) Sleep(3);
+					else if (frames < 70 && frames >= 20) {
+						glide = false;
 						Sleep(2);
+						while (Squash < 7) {
+							Squash++;
+							frames++;
+							WorldMove(UP);
+							InvalidateRect(hWnd, NULL, FALSE);
+							Sleep(2);
+						}
 					}
-				}
-				else  if (frames < 200 && frames >= 70)
-				{
-					Sleep(1);
-					while (Squash < 8)
+					else  if (frames < 200 && frames >= 70)
 					{
-						Squash++;
-						frames++;
-						WorldMove(UP);
-						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
+						if (frames >= 190) {
+							slow = true;
+						}
+						while (Squash < 8)
+						{
+							Squash++;
+							frames++;
+							WorldMove(UP);
+							InvalidateRect(hWnd, NULL, FALSE);
+							Sleep(1);
+						}
 					}
-				}
-				else if (frames >= 400)
-				{
-					Sleep(1);
-					while (Squash <= 9)
+					else if (frames >= 400 && frames >= 200)
 					{
-						Squash++;
-						frames++;
-						WorldMove(UP);
-						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
+						if (frames >= 300)
+						{
+							slower = true;
+							slow = false;
+						}
+						while (Squash <= 9)
+						{
+							Squash++;
+							frames++;
+							WorldMove(UP);
+							InvalidateRect(hWnd, NULL, FALSE);
+							Sleep(1);
+						}
 					}
-				}
-				else Sleep(1); frames++;
+					else Sleep(1); frames++;
 			}
 		}
 
+//**************************************************************************************************************************\\
 
 		// Walk animation
 		if ((left || right) && !jump && !(WallCheckRight() || WallCheckLeft()))
@@ -369,7 +373,7 @@ void animation(HWND hWnd)
 		InvalidateRect(hWnd, NULL, FALSE);
 
 		// update resolution 
-		Sleep(20);
+		//Sleep(20);
 
 	}// end game loop
 }
@@ -382,26 +386,14 @@ void movement(HWND hWnd)
 
 	while (run)
 	{
-		
+
+//***********************************************************************************************************\\
+
 		//RIGHT
-		if (right && !left)
+		if (right)
 		{
-			if (LandCheck())
-			{
-				Pointy = Collider();
-			}
-			int temp = Player.right;
-			while (Player.right != (temp + 5))
-			{
-				if (WallCheckRight())
-				{
-					break;
-				}
-				Player.right++;
-				//Player.left++;
-				InvalidateRect(hWnd, NULL, FALSE);
-				Sleep(15);
-			}
+			Player.right++;
+			if (LandCheck()) {}
 			while (right)
 			{
 				if ((collision && Player.left < Pointy->right) && !WallCheckRight())
@@ -420,7 +412,7 @@ void movement(HWND hWnd)
 						Sleep(3);
 					}
 				}
-				else if (((LandCheck()) || (jump || fall) && !slow) && !WallCheckRight())
+				else if (((LandCheck()) || ((jump || fall) && !slow)) && !WallCheckRight())
 				{
 					while (!collision && !slow) {
 						if (glide && toggle == 1)
@@ -446,47 +438,31 @@ void movement(HWND hWnd)
 					WorldMove(RIGHT);
 					fall = true;
 					collision = false;
-					slow = true;
 					while ((fall && right) && !WallCheckRight())
 					{
-						WorldMove(RIGHT);
-						Sleep(9);
+						if (slow)
+						{
+							WorldMove(RIGHT);
+							Sleep(9);
+						}
+						else if (slower)
+						{
+							WorldMove(RIGHT);
+							Sleep(15);
+						}
 					}
 				}
 				
 			}
-			while (Player.right != temp)
-			{
-				if (WallCheckRight())
-				{
-					break;
-				}
-				Player.right--;
-				//Player.left--;
-				InvalidateRect(hWnd, NULL, FALSE);
-				Sleep(10);
-			}
 		}
 
+//***********************************************************************************************************\\
+
 		//LEFT
-		if (left && !right)
+		if (left)
 		{
-			if (LandCheck())
-			{
-				Pointy = Collider();
-			}
-			int temp = Player.left;
-			while (Player.left != (temp - 5))
-			{
-				if (WallCheckLeft())
-				{
-					break;
-				}
-				Player.left--;
-				//Player.right--;
-				InvalidateRect(hWnd, NULL, FALSE);
-				Sleep(15);
-			}
+			Player.left--;
+			if (LandCheck()){}
 			while (left)
 			{
 				if ((collision && Player.right > Pointy->left) && !WallCheckLeft())
@@ -505,7 +481,7 @@ void movement(HWND hWnd)
 						Sleep(3);
 					}
 				}
-				else if (((LandCheck()) || (jump || fall) && !slow) && !WallCheckLeft())
+				else if (((LandCheck()) || ((jump || fall) && !slow)) && !WallCheckLeft())
 				{
 					while ((!collision && !slow) && !WallCheckLeft()) {
 						if (glide && toggle == 0)
@@ -531,25 +507,21 @@ void movement(HWND hWnd)
 					WorldMove(LEFT);
 					fall = true;
 					collision = false;
-					slow = true;
 					while ((fall && left) && !WallCheckLeft())
 					{
-						WorldMove(LEFT);
-						Sleep(9);
+						if (slow)
+						{
+							WorldMove(LEFT);
+							Sleep(9);
+						}
+						else if (slower)
+						{
+							WorldMove(LEFT);
+							Sleep(15);
+						}
 					}
 				}
 				
-			}
-			while (Player.left != temp)
-			{
-				if (WallCheckLeft())
-				{
-					break;
-				}
-				Player.left++;
-				//Player.right++;
-				InvalidateRect(hWnd, NULL, FALSE);
-				Sleep(10);
 			}
 		}
 
@@ -557,11 +529,12 @@ void movement(HWND hWnd)
 		InvalidateRect(hWnd, NULL, FALSE);
 
 		// update resolution 
-		Sleep(20);
+		//Sleep(20);
 
 	}// end game loop
 }
 
+//***********************************************************************************************************\\
 
 int CALLBACK WinMain(
 	_In_ HINSTANCE hInstance,
@@ -655,6 +628,8 @@ int CALLBACK WinMain(
 
 	return (int)msg.wParam;
 }
+
+//***********************************************************************************************************\\
 
 //  
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)  
@@ -775,21 +750,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			// Key codes: https://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
 			// wParam contains key code
-			if (wParam == VK_SPACE)
+			if (wParam == VK_UP || wParam == 0x57)
 			{
 				if (collision)
 				{
 					jump = true;
 				}
 			}
-			else if (wParam == VK_RIGHT)
+			else if (wParam == VK_RIGHT || wParam == 0x44)
 			{
 				right = true;
 				left = false;
 				toggle = 1;
 				
 			}
-			else if (wParam == VK_LEFT)
+			else if (wParam == VK_LEFT|| wParam == 0x41)
 			{
 				left = true;
 				right = false;
@@ -799,15 +774,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		case WM_KEYUP:
 
-			if (wParam == VK_RIGHT)
+			if (wParam == VK_RIGHT || wParam == 0x44)
 			{
 				right = false;
 				toggle = -1;
+				Player.right--;
 			}
-			else if (wParam == VK_LEFT)
+			else if (wParam == VK_LEFT || wParam == 0x41)
 			{
 				left = false;
 				toggle = -1;
+				Player.left++;
 			}
 			break;
 
@@ -823,12 +800,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+//***********************************************************************************************************\\
+
 BOOL LandCheck()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
 		if (Player.bottom > entities[i]->top && Player.left <= entities[i]->right && Player.right >= entities[i]->left && Player.top < entities[i]->top)
-		{                                                                                                                                        
+		{
+			Pointy = entities[i];
 			return true;                                                                                                                         
 			break;                                                                                                                               
 		}                                                                                                                                        
@@ -840,7 +820,7 @@ BOOL WallCheckLeft()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom <= entities[i]->bottom && Player.left == entities[i]->right && Player.top >= entities[i]->top)
+		if (Player.bottom <= entities[i]->bottom && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top >= entities[i]->top)
 		{
 			WallPointy = entities[i];
 			return true;
@@ -854,7 +834,7 @@ BOOL WallCheckRight()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom <= entities[i]->bottom && Player.right == entities[i]->left && Player.top >= entities[i]->top)
+		if (Player.bottom <= entities[i]->bottom && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top >= entities[i]->top)
 		{
 			WallPointy = entities[i];
 			return true;
@@ -862,21 +842,6 @@ BOOL WallCheckRight()
 		}
 	}
 	return false;
-}
-
-                                                                                                                                                 
-RECT * Collider()                                                                                                                                
-{                                                                                                                                                
-	RECT * rect = &Death;                                                                                                                        
-	for (int i = 0; i < entities.size(); i++)                                                                                                    
-	{                                                                                                                                            
-		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
-		{
-			rect = entities[i];
-			break;
-		}
-	}
-	return rect;
 }
 
 void WorldMove(Dir d)
