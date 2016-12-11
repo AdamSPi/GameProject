@@ -142,7 +142,6 @@ void animation(HWND hWnd)
 		// Jump animation
 		if (jump && collision)
 		{
-
 			while (frames < 100)
 			{
 				Squish = 0;
@@ -253,9 +252,12 @@ void animation(HWND hWnd)
 			// Wall jumping
 			if ((left || right))
 			{
-				if (left && WallCheckLeft())
+				if (left && WallCheckLeft() && !LandCheck())
 				{
 					Squanch = 0;
+					frames = 0;
+					slow = false;
+					slower = false;
 					while (!LandCheck() && left && !jump)
 					{
 						while (Squash != 4)
@@ -278,7 +280,11 @@ void animation(HWND hWnd)
 						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(15);
-						if (!WallCheckLeft()) break;
+						if (!WallCheckLeft()) { 
+							Squash = 0;
+							collision = false;
+							fall = true; 
+							break; }
 					}
 					while (Squash != 0)
 					{
@@ -287,9 +293,12 @@ void animation(HWND hWnd)
 						Sleep(10);
 					}
 				}
-				if (right && WallCheckRight())
+				if (right && WallCheckRight() && !LandCheck())
 				{
 					Squanch = 0;
+					frames = 0;
+					slow = false;
+					slower = false;
 					while (!LandCheck() && right && !jump)
 					{
 						while (Squash != 4)
@@ -312,7 +321,11 @@ void animation(HWND hWnd)
 						WorldMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(15);
-						if (!WallCheckRight()) break;
+						if (!WallCheckRight()) {
+							Squash = 0;
+							collision = false;
+							fall = true; 
+							break; }
 					}
 					while (Squash != 0)
 					{
@@ -328,6 +341,113 @@ void animation(HWND hWnd)
 					fall = true;
 				}
 			}
+
+			//-----------------------------------------------------------------------------\\
+
+			if (jump && collision)
+			{
+				while (frames < 100)
+				{
+					Squish = 0;
+					while (Squish <= 6 && frames < 1)
+					{
+						Squish++;
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(10);
+					}
+					while (Squish != -1 && frames < 1)
+					{
+						Squish--;
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(6);
+					}
+					if (!WallCheckTop() || !!(WallCheckLeft() || WallCheckRight()))
+					{
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(1);
+						WorldMove(DOWN);
+
+						if (frames <= 50)
+						{
+							collision = false;
+							if (Squash < 8)
+							{
+								Squash++;
+								frames++;
+								WorldMove(DOWN);
+								InvalidateRect(hWnd, NULL, FALSE);
+								Sleep(1);
+								continue;
+							}
+							frames++;
+							WorldMove(DOWN);
+							InvalidateRect(hWnd, NULL, FALSE);
+							Sleep(1);
+							continue;
+						}
+						if (frames <= 80 && frames > 50) {
+							while (Squash > 5)
+							{
+								Squash--;
+								WorldMove(DOWN);
+								frames++;
+								InvalidateRect(hWnd, NULL, FALSE);
+								Sleep(6);
+							}
+							WorldMove(DOWN);
+							frames++;
+							InvalidateRect(hWnd, NULL, FALSE);
+							Sleep(2);
+						}
+						else if (frames <= 100 && frames > 80) {
+							glide = true; Sleep(4); while (Squash > 3)
+							{
+								Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(7); WorldMove(DOWN);
+							}frames++;
+						}
+					}
+					else break;
+				}
+				while (!(WallCheckLeft() || WallCheckRight()))
+				{
+					Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); WorldMove(DOWN);
+					while (Squash != 0)
+					{
+						if (Squash > 0)Squash--;
+						else Squash++;
+						Squish++;
+						WorldMove(DOWN);
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(10);
+					}
+					while (Squish != 0)
+					{
+						if (Squish > 0) Squish--;
+						else Squish++;
+						WorldMove(UP);
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(10);
+					}
+					break;
+				}
+				frames = 0; // reset
+				while (Squash != 0)
+				{
+					Squash--;
+					WorldMove(DOWN);
+					InvalidateRect(hWnd, NULL, FALSE);
+					Sleep(7);
+				}
+				while (Squish < 6)
+				{
+					Squish++;
+					InvalidateRect(hWnd, NULL, FALSE);
+					Sleep(7);
+				}
+				jump = false;
+				fall = true;
+			}
+
 			//-----------------------------------------------------------------------------\\
 
 			while (!collision && !((left&&WallCheckLeft())||(right&&WallCheckRight())))
@@ -347,6 +467,7 @@ void animation(HWND hWnd)
 					fall = false;
 					collision = true;
 					slow = false;
+					slower = false;
 					toggle = -1;
 					frames = 0;
 					int offset = 0;
@@ -628,7 +749,7 @@ void movement(HWND hWnd)
 						Sleep(3);
 					}
 				}
-				else if (((LandCheck()) || ((jump || fall) && !slow)) && !WallCheckRight())
+				else if (((LandCheck()) || ((jump || fall) && !slow && !slower)) && !WallCheckRight())
 				{
 					while ((!collision && !slow) && !WallCheckRight()) {
 						if (glide && toggle == 1)
@@ -647,6 +768,7 @@ void movement(HWND hWnd)
 						{
 							slow = true;
 						}
+
 					}
 				}
 				else if (!(LandCheck()) && !WallCheckRight())
@@ -666,6 +788,7 @@ void movement(HWND hWnd)
 							WorldMove(RIGHT);
 							Sleep(15);
 						}
+						InvalidateRect(hWnd, NULL, FALSE);
 					}
 				}
 			}
@@ -696,7 +819,7 @@ void movement(HWND hWnd)
 						Sleep(3);
 					}
 				}
-				else if (((LandCheck()) || ((jump || fall) && !slow)) && !WallCheckLeft())
+				else if (((LandCheck()) || ((jump || fall) && !slow && !slower)) && !WallCheckLeft())
 				{
 					while ((!collision && !slow) && !WallCheckLeft()) {
 						if (glide && toggle == 0)
@@ -734,6 +857,7 @@ void movement(HWND hWnd)
 							WorldMove(LEFT);
 							Sleep(15);
 						}
+						InvalidateRect(hWnd, NULL, FALSE);
 					}
 				}
 			}
@@ -975,7 +1099,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			// Key codes: https://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
 			// wParam contains key code
-			if (wParam == VK_UP || wParam == 0x57)
+			if (wParam == VK_UP || wParam == 0x57 || wParam == VK_SPACE)
 			{
 				if (collision)
 				{
@@ -1031,11 +1155,10 @@ BOOL LandCheck()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
+		if (Player.bottom == entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
 		{
 			Pointy = entities[i];
-			return true;                                                                                                                         
-			break;                                                                                                                               
+			return true;                                                                                                                          
 		}                                                                                                                                        
 	}                                                                                                                                            
 	return false;                                                                                                                                
@@ -1045,10 +1168,9 @@ BOOL WallCheckTop()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.top < entities[i]->bottom && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.bottom > entities[i]->bottom)
+		if (Player.top <= entities[i]->bottom && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.bottom > entities[i]->bottom)
 		{
 			return true;
-			break;
 		}
 	}
 	return false;
@@ -1058,10 +1180,13 @@ BOOL WallCheckLeft()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom < entities[i]->bottom && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top > entities[i]->top)
+		if (Player.bottom >= entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top) { continue; }
+		else if (((Player.bottom < entities[i]->bottom && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top > entities[i]->top)
+			|| (Player.bottom > entities[i]->bottom && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top < entities[i]->bottom)
+			|| (Player.bottom > entities[i]->top && Player.left < entities[i]->right && Player.left > entities[i]->left && Player.top < entities[i]->top))
+			)
 		{
 			return true;
-			break;
 		}
 	}
 	return false;
@@ -1071,10 +1196,13 @@ BOOL WallCheckRight()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom < entities[i]->bottom && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top > entities[i]->top)
+		if (Player.bottom >= entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top) { continue; }
+		else if (((Player.bottom < entities[i]->bottom && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top > entities[i]->top)
+			|| (Player.bottom > entities[i]->bottom && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top < entities[i]->bottom)
+			|| (Player.bottom > entities[i]->top && Player.right > entities[i]->left && Player.right < entities[i]->right && Player.top < entities[i]->top))
+			)
 		{
 			return true;
-			break;
 		}
 	}
 	return false;
