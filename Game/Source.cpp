@@ -62,7 +62,6 @@ static RECT Ground;
 static RECT Wall1;
 static RECT Wall2;
 static RECT Wall3;
-static RECT Death;
 static RECT Platform1;
 
 
@@ -78,6 +77,7 @@ BOOL glide = false;
 // Movement flags
 BOOL right = false;
 BOOL left = false;
+BOOL Control = false;
 
 // Movement speed flags
 BOOL fast;
@@ -87,6 +87,36 @@ int toggle = -1;
 
 BOOL run;
 
+void Spawn()
+{
+	Player.left = 482;
+	Player.top = -135;
+	Player.bottom = -100;
+	Player.right = 518;
+
+	Ground.left = 0;
+	Ground.top = HEIGHT/2;
+	Ground.right = WIDTH;
+	Ground.bottom = Ground.top+200;
+
+	Wall1.left = Ground.left;
+	Wall1.top = Ground.top - 250;
+	Wall1.right = Wall1.left + 100;
+	Wall1.bottom = Ground.top + 1;
+
+	Wall2.left = Wall1.left + 200;
+	Wall2.top = Wall1.top - 250;
+	Wall2.right = Wall2.left + 100;
+	Wall2.bottom = Wall1.top;
+
+	Wall3.left = Ground.right - 100;
+	Wall3.top = Ground.top - 250;
+	Wall3.right = Ground.right;
+	Wall3.bottom = Ground.top + 1;
+}
+
+
+
 //***********************************************************************************************************\\
 
 void animation(HWND hWnd)
@@ -94,10 +124,12 @@ void animation(HWND hWnd)
 
 	while (run)
 	{
+		if (Control)
+		{
 		// Jump animation
 		if (jump && collision)
 		{
-			
+
 			while (frames < 100)
 			{
 				Squish = 0;
@@ -165,7 +197,7 @@ void animation(HWND hWnd)
 				Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); WorldMove(DOWN);
 				while (Squash != 0)
 				{
-					if(Squash > 0)Squash--;
+					if (Squash > 0)Squash--;
 					else Squash++;
 					Squish++;
 					WorldMove(DOWN);
@@ -174,7 +206,7 @@ void animation(HWND hWnd)
 				}
 				while (Squish != 0)
 				{
-					if(Squish > 0) Squish--;
+					if (Squish > 0) Squish--;
 					else Squish++;
 					WorldMove(UP);
 					InvalidateRect(hWnd, NULL, FALSE);
@@ -200,9 +232,9 @@ void animation(HWND hWnd)
 			fall = true;
 		}
 
-//**************************************************************************************************************************\\
+		//**************************************************************************************************************************\\
 
-		// Falling condition
+				// Falling condition
 		if (fall && !collision)
 		{
 			// Wall jumping
@@ -235,7 +267,7 @@ void animation(HWND hWnd)
 					}
 					while (Squash != 0)
 					{
-						if(Squash!=0) Squash--;
+						if (Squash != 0) Squash--;
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(10);
 					}
@@ -279,11 +311,11 @@ void animation(HWND hWnd)
 					fall = true;
 				}
 			}
-//-----------------------------------------------------------------------------\\
+			//-----------------------------------------------------------------------------\\
 
 			while (!collision)
 			{
-				while (Squash < 4 )
+				while (Squash < 4)
 				{
 					if (Squish != 0) { Squish--; Sleep(10); }
 					Squash++;
@@ -293,96 +325,120 @@ void animation(HWND hWnd)
 					if (frames < 20) { Sleep(5); }
 
 				}
-					if (LandCheck())
+				if (LandCheck())
+				{
+					fall = false;
+					collision = true;
+					slow = false;
+					toggle = -1;
+					frames = 0;
+					int offset = 0;
+					while (Squash != 0)
 					{
-						fall = false;
-						collision = true;
+						Squash--;
+						Squish++;
+						WorldMove(DOWN);
+						offset++;
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(7);
+					}
+					while (Squish != 0)
+					{
+						Squish--;
+						WorldMove(UP);
+						offset--;
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(5);
+					}
+					while (offset != 0)
+					{
+						WorldMove(DOWN);
+						offset++;
+					}
+					Player.bottom = Pointy->top;
+					Player.top = Player.bottom - 36;
+					Player.left = Player.right - 36;
+					Player.right = Player.left + 36;
+					break;
+				}
+				frames++;
+				WorldMove(UP);
+				InvalidateRect(hWnd, NULL, FALSE);
+				if (frames < 20) Sleep(3);
+				else if (frames < 70 && frames >= 20) {
+					glide = false;
+					Sleep(2);
+					while (Squash < 7) {
+						Squash++;
+						frames++;
+						WorldMove(UP);
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(2);
+					}
+				}
+				else  if (frames < 200 && frames >= 70)
+				{
+					Sleep(1);
+					if (frames >= 190) {
+						slow = true;
+					}
+					while (Squash < 8)
+					{
+						Squash++;
+						frames++;
+						WorldMove(UP);
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(1);
+					}
+				}
+				else if (frames <= 400 && frames >= 200)
+				{
+					Sleep(1);
+					if (frames >= 300)
+					{
+						slower = true;
 						slow = false;
-						toggle = -1;
-						frames = 0;
-						int offset = 0;
-						while (Squash != 0)
+					}
+					while (Squash <= 9)
+					{
+						Squash++;
+						frames++;
+						WorldMove(UP);
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(1);
+					}
+				}
+				else
+				{
+					if (Ground.bottom > 500)
+					{
+						Sleep(1); frames++;
+					}
+					else if (Player.top < 1000)
+					{
+						while ((Player.top < 1000))
 						{
-							Squash--;
-							Squish++;
-							WorldMove(DOWN);
-							offset++;
+							Player.top++;
+							Player.bottom++;
 							InvalidateRect(hWnd, NULL, FALSE);
-							Sleep(7);
+							Sleep(1);
 						}
-						while (Squish != 0)
-						{
-							Squish--;
-							WorldMove(UP);
-							offset--;
-							InvalidateRect(hWnd, NULL, FALSE);
-							Sleep(5);
-						}
-						while (offset != 0)
-						{
-							WorldMove(DOWN);
-							offset++;
-						}
-						Player.bottom = Pointy->top;
-						Player.top = Player.bottom - 36;
-						Player.left = Player.right - 36;
-						Player.right = Player.left + 36;
+						Spawn();
+						Control = false;
 						break;
 					}
-					frames++;
-					WorldMove(UP);
-					InvalidateRect(hWnd, NULL, FALSE);
-					if (frames < 20) Sleep(3);
-					else if (frames < 70 && frames >= 20) {
-						glide = false;
-						Sleep(2);
-						while (Squash < 7) {
-							Squash++;
-							frames++;
-							WorldMove(UP);
-							InvalidateRect(hWnd, NULL, FALSE);
-							Sleep(2);
-						}
-					}
-					else  if (frames < 200 && frames >= 70)
-					{
-						Sleep(1);
-						if (frames >= 190) {
-							slow = true;
-						}
-						while (Squash < 8)
-						{
-							Squash++;
-							frames++;
-							WorldMove(UP);
-							InvalidateRect(hWnd, NULL, FALSE);
-							Sleep(1);
-						}
-					}
-					else if (frames >= 400 && frames >= 200)
-					{
-						Sleep(1);
-						if (frames >= 300)
-						{
-							slower = true;
-							slow = false;
-						}
-						while (Squash <= 9)
-						{
-							Squash++;
-							frames++;
-							WorldMove(UP);
-							InvalidateRect(hWnd, NULL, FALSE);
-							Sleep(1);
-						}
-					}
-					else Sleep(1); frames++;
+				}
 			}
 		}
 
-//**************************************************************************************************************************\\
 
-		// Walk animation
+
+
+
+
+		//**************************************************************************************************************************\\
+
+				// Walk animation
 		if ((left || right) && !jump && !(WallCheckRight() || WallCheckLeft()))
 		{
 			while (Squanch < 5 && !jump && !(WallCheckRight() || WallCheckLeft()))
@@ -400,13 +456,123 @@ void animation(HWND hWnd)
 				Sleep(30);
 			}
 		}
-		else { while (Squanch != -1) { Squanch--; InvalidateRect(hWnd, NULL, FALSE);Sleep(30);} }
+		else { while (Squanch != -1) { Squanch--; InvalidateRect(hWnd, NULL, FALSE); Sleep(30); } }
 
 		// draw game
 		InvalidateRect(hWnd, NULL, FALSE);
 
 		// update resolution 
-		//Sleep(20);
+		//Sleep(20);top++
+		}
+		else
+		{
+			while (!collision)
+			{
+				while (Squash < 4)
+				{
+					if (Squish != 0) { Squish--; Sleep(10); }
+					Squash++;
+					frames++;
+					Player.top++;
+					Player.bottom++;
+					InvalidateRect(hWnd, NULL, FALSE);
+					if (frames < 20) { Sleep(5); }
+
+				}
+				if (LandCheck())
+				{
+					fall = false;
+					collision = true;
+					slow = false;
+					toggle = -1;
+					frames = 0;
+					int offset = 0;
+					while (Squash != 0)
+					{
+						Squash--;
+						Squish++;
+						Player.top++;
+						Player.bottom++;
+						offset++;
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(7);
+					}
+					while (Squish != 0)
+					{
+						Squish--;
+						Player.top--;
+						Player.bottom--;
+						offset--;
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(5);
+					}
+					while (offset != 0)
+					{
+						Player.top++;
+						Player.bottom++;
+						offset++;
+					}
+					Player.bottom = Pointy->top;
+					Player.top = Player.bottom - 36;
+					Player.left = Player.right - 36;
+					Player.right = Player.left + 36;
+					Control = true;
+					break;
+				}
+				frames++;
+				Player.top++;
+				Player.bottom++;
+				InvalidateRect(hWnd, NULL, FALSE);
+				if (frames < 20) Sleep(3);
+				else if (frames < 70 && frames >= 20) {
+					glide = false;
+					Sleep(2);
+					while (Squash < 7) {
+						Squash++;
+						frames++;
+						Player.top++;
+						Player.bottom++;
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(2);
+					}
+				}
+				else  if (frames < 200 && frames >= 70)
+				{
+					Sleep(1);
+					if (frames >= 190) {
+						slow = true;
+					}
+					while (Squash < 8)
+					{
+						Squash++;
+						frames++;
+						Player.top++;
+						Player.bottom++;
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(1);
+					}
+				}
+				else if (frames <= 400 && frames >= 200)
+				{
+					Sleep(1);
+					if (frames >= 300)
+					{
+						slower = true;
+						slow = false;
+					}
+					while (Squash <= 9)
+					{
+						Squash++;
+						frames++;
+						Player.top++;
+						Player.bottom++;
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(1);
+					}
+				}
+				else Sleep(1); frames++;
+			}
+		}
 
 	}// end game loop
 }
@@ -720,30 +886,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SetRect(&Ground, 1, 1, 34, 34);
 			*/
 
-			Player.left = 482;
-			Player.top = 382;
-			Player.bottom = 418;
-			Player.right = 518;
-
-			Ground.left = 0;
-			Ground.top = HEIGHT;
-			Ground.right = WIDTH;
-			Ground.bottom = HEIGHT+200;
-
-			Wall1.left = Ground.left;
-			Wall1.top = Ground.top - 250;
-			Wall1.right = Wall1.left + 100;
-			Wall1.bottom = Ground.top+1;
-
-			Wall2.left = Wall1.left+200;
-			Wall2.top = Wall1.top-250;
-			Wall2.right = Wall2.left + 100;
-			Wall2.bottom = Wall1.top;
-
-			Wall3.left = Ground.right-100;
-			Wall3.top = Ground.top - 250;
-			Wall3.right = Ground.right;
-			Wall3.bottom = Ground.top + 1;
+			Spawn();
 
 			break;
 		}
