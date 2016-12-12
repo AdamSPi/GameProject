@@ -107,7 +107,7 @@ void Spawn()
 	Wall2.left = Wall1.left + 200;
 	Wall2.top = Wall1.top - 250;
 	Wall2.right = Wall2.left + 100;
-	Wall2.bottom = Wall1.top;
+	Wall2.bottom = Wall1.top+100;
 
 	Wall3.left = Ground.right - 100;
 	Wall3.top = Ground.top - 250;
@@ -295,10 +295,6 @@ void animation(HWND hWnd)
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(10);
 					}
-					if (jump)
-					{
-						left = false;
-					}
 					if (!jump)
 					{
 						Squash = 0;
@@ -347,10 +343,6 @@ void animation(HWND hWnd)
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
 					}
-					if (jump)
-					{
-						right = false;
-					}
 					if (!jump)
 					{
 						Squash = 0;
@@ -380,7 +372,6 @@ void animation(HWND hWnd)
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(6);
 					}
-					Squish = 0;
 					if ( !((left && WallCheckLeft()) || (right && WallCheckRight())))
 					{
 						InvalidateRect(hWnd, NULL, FALSE);
@@ -742,67 +733,67 @@ void movement(HWND hWnd)
 		if (right && !WallCheckRight())
 		{
 			if (LandCheck()) {}
-			while (right)
-			{
-				if ((collision && Player.left < Pointy->right) && !WallCheckRight())
+				while (right && !WallCheckRight())
 				{
-					toggle = 1;
-					if (!fast)
+					if ((collision && Player.left < Pointy->right))
 					{
-						CameraMove(RIGHT);
-						InvalidateRect(hWnd, NULL, FALSE);
-						Sleep(4);
-					}
-					else if(fast)
-					{
-						CameraMove(RIGHT);
-						InvalidateRect(hWnd, NULL, FALSE);
-						Sleep(3);
-					}
-				}
-				else if (((LandCheck()) || ((jump || fall) && !slow && !slower)) && !WallCheckRight())
-				{
-					while ((!collision && !slow) && !WallCheckRight()) {
-						if (glide && toggle == 1)
+						toggle = 1;
+						if (!fast)
 						{
 							CameraMove(RIGHT);
 							InvalidateRect(hWnd, NULL, FALSE);
-							Sleep(2);
+							Sleep(4);
 						}
-						else if (toggle == 1)
+						else if (fast)
 						{
 							CameraMove(RIGHT);
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(3);
 						}
-						else if (toggle == 0)
-						{
-							slow = true;
-						}
-
 					}
-				}
-				else if (!(LandCheck()) && !WallCheckRight())
-				{
-					CameraMove(RIGHT);
-					fall = true;
-					collision = false;
-					while ((fall && right) && !WallCheckRight())
+					else if (((LandCheck()) || ((jump || fall) && !slow && !slower)))
 					{
-						if (slow)
-						{
-							CameraMove(RIGHT);
-							Sleep(9);
+						while ((!collision && !slow) && !WallCheckRight()) {
+							if (glide && toggle == 1)
+							{
+								CameraMove(RIGHT);
+								InvalidateRect(hWnd, NULL, FALSE);
+								Sleep(2);
+							}
+							else if (toggle == 1)
+							{
+								CameraMove(RIGHT);
+								InvalidateRect(hWnd, NULL, FALSE);
+								Sleep(3);
+							}
+							else if (toggle == 0)
+							{
+								slow = true;
+							}
+
 						}
-						else if (slower)
+					}
+					else if (!(LandCheck()))
+					{
+						CameraMove(RIGHT);
+						fall = true;
+						collision = false;
+						while ((fall && right) && !WallCheckRight())
 						{
-							CameraMove(RIGHT);
-							Sleep(15);
+							if (slow)
+							{
+								CameraMove(RIGHT);
+								Sleep(9);
+							}
+							else if (slower)
+							{
+								CameraMove(RIGHT);
+								Sleep(15);
+							}
+							InvalidateRect(hWnd, NULL, FALSE);
 						}
-						InvalidateRect(hWnd, NULL, FALSE);
 					}
 				}
-			}
 		}
 
 //***********************************************************************************************************\\
@@ -811,68 +802,70 @@ void movement(HWND hWnd)
 		if (left && !WallCheckLeft())
 		{
 			if (LandCheck()){}
-			while (left)
-			{
-				if ((collision && Player.right > Pointy->left) && !WallCheckLeft())
+				while (left && !WallCheckLeft())
 				{
-					toggle = 0;
-					if (!fast)
+					if ((collision && Player.right > Pointy->left))
 					{
-						CameraMove(LEFT);
-						InvalidateRect(hWnd, NULL, FALSE);
-						Sleep(4);
-					}
-					else if (fast)
-					{
-						CameraMove(LEFT);
-						InvalidateRect(hWnd, NULL, FALSE);
-						Sleep(3);
-					}
-					
-				}
-				else if (((LandCheck()) || ((jump || fall) && !slow && !slower)) && !WallCheckLeft())
-				{
-					while ((!collision && !slow) && !WallCheckLeft()) {
-						if (glide && toggle == 0)
+						toggle = 0;
+						if (!fast)
 						{
 							CameraMove(LEFT);
 							InvalidateRect(hWnd, NULL, FALSE);
-							Sleep(2);
+							Sleep(4);
 						}
-						else if (toggle == 0)
+						else if (fast)
 						{
 							CameraMove(LEFT);
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(3);
 						}
-						else if (toggle == 1)
-						{
-							slow = true;
-						}
+
 					}
-				}
-				else if (!(LandCheck()) && !WallCheckLeft())
-				{
-					CameraMove(LEFT);
-					fall = true;
-					collision = false;
-					while ((fall && left) && !WallCheckLeft())
+					else if (((LandCheck()) || ((jump || fall) && !slow && !slower)))
 					{
-						if (slow)
-						{
-							CameraMove(LEFT);
-							Sleep(9);
+						while ((!collision && !slow) && !WallCheckLeft()) {
+							if (glide && toggle == 0)
+							{
+								CameraMove(LEFT);
+								InvalidateRect(hWnd, NULL, FALSE);
+								Sleep(2);
+							}
+							else if (toggle == 0)
+							{
+								CameraMove(LEFT);
+								InvalidateRect(hWnd, NULL, FALSE);
+								Sleep(3);
+							}
+							else if (toggle == 1)
+							{
+								slow = true;
+							}
 						}
-						else if (slower)
+					}
+					else if (!(LandCheck()))
+					{
+						CameraMove(LEFT);
+						fall = true;
+						collision = false;
+						while ((fall && left) && !WallCheckLeft())
 						{
-							CameraMove(LEFT);
-							Sleep(15);
+							if (slow)
+							{
+								CameraMove(LEFT);
+								Sleep(9);
+							}
+							else if (slower)
+							{
+								CameraMove(LEFT);
+								Sleep(15);
+							}
+							InvalidateRect(hWnd, NULL, FALSE);
 						}
-						InvalidateRect(hWnd, NULL, FALSE);
 					}
 				}
-			}
 		}
+
+	
 
 		// update resolution 
 		//Sleep(20);
