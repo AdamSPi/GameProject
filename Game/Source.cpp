@@ -158,7 +158,7 @@ void animation(HWND hWnd)
 					Sleep(6);
 				}
 				Squish = 0;
-				if (!((left && WallCheckLeft()) || (right && WallCheckRight())))
+				if (!((left && WallCheckLeft()) || (right && WallCheckRight())) && !WallCheckTop())
 				{
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(1);
@@ -205,7 +205,30 @@ void animation(HWND hWnd)
 				}
 				else break;
 			}
-			while (((left && WallCheckLeft()) || (right && WallCheckRight())))
+			while (WallCheckTop())
+			{
+				Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); CameraMove(DOWN);
+				while (Squash != 0)
+				{
+					if (Squash > 0)Squash--;
+					else Squash++;
+					Squish++;
+					CameraMove(DOWN);
+					InvalidateRect(hWnd, NULL, FALSE);
+					Sleep(10);
+				}
+				while (Squish != 0)
+				{
+					if (Squish > 0) Squish--;
+					else Squish++;
+					CameraMove(UP);
+					InvalidateRect(hWnd, NULL, FALSE);
+					Sleep(10);
+				}
+				collision = false;
+				break;
+			}
+			while ((left && WallCheckLeft()) || (right && WallCheckRight()))
 			{
 				Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); CameraMove(DOWN);
 				while (Squash != 0)
@@ -372,7 +395,7 @@ void animation(HWND hWnd)
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(6);
 					}
-					if ( !((left && WallCheckLeft()) || (right && WallCheckRight())))
+					if ( !((left && WallCheckLeft()) || (right && WallCheckRight())) && !WallCheckTop())
 					{
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
@@ -419,6 +442,29 @@ void animation(HWND hWnd)
 						}
 					}
 					else break;
+				}
+				while (WallCheckTop())
+				{
+					Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); CameraMove(DOWN);
+					while (Squash != 0)
+					{
+						if (Squash > 0)Squash--;
+						else Squash++;
+						Squish++;
+						CameraMove(DOWN);
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(10);
+					}
+					while (Squish != 0)
+					{
+						if (Squish > 0) Squish--;
+						else Squish++;
+						CameraMove(UP);
+						InvalidateRect(hWnd, NULL, FALSE);
+						Sleep(10);
+					}
+					collision = false;
+					break;
 				}
 				while (((left && WallCheckLeft()) || (right && WallCheckRight())))
 				{
@@ -1167,7 +1213,7 @@ BOOL WallCheckTop()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.top <= entities[i]->bottom && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.bottom > entities[i]->bottom)
+		if (Player.top <= entities[i]->bottom && Player.left < entities[i]->right-1 && Player.right > entities[i]->left+1 && Player.bottom > entities[i]->bottom)
 		{
 			return true;
 		}
