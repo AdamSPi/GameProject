@@ -45,7 +45,7 @@ BOOL WallCheckRight();
 BOOL WallCheckTop();
 
 // Moves the entire world to keep the Player centered on the screen
-void WorldMove(Dir d);
+void CameraMove(Dir d);
 
 // List of collidables objects
 std::vector<RECT*> entities;
@@ -140,28 +140,29 @@ void animation(HWND hWnd)
 		if (Camera)
 		{
 		// Jump animation
-		if (jump && collision)
+		if (jump && collision && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 		{
 			while (frames < 100 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 			{
 				Squish = 0;
-				while (Squish <= 6 && frames < 1)
+				while (Squish <= 6 && frames < 1 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 				{
 					Squish++;
 					InvalidateRect(hWnd, NULL, FALSE);
-					Sleep(10);
+					Sleep(7);
 				}
-				while (Squish != -1 && frames < 1)
+				while (Squish != -1 && frames < 1 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 				{
 					Squish--;
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(6);
 				}
-				if (!WallCheckTop())
+				Squish = 0;
+				if (!WallCheckTop() && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 				{
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(1);
-					WorldMove(DOWN);
+					CameraMove(DOWN);
 
 					if (frames <= 50)
 					{
@@ -169,13 +170,13 @@ void animation(HWND hWnd)
 						{
 							Squash++;
 							frames++;
-							WorldMove(DOWN);
+							CameraMove(DOWN);
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(1);
 							continue;
 						}
 						frames++;
-						WorldMove(DOWN);
+						CameraMove(DOWN);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
 						continue;
@@ -185,12 +186,12 @@ void animation(HWND hWnd)
 						{
 							collision = false;
 							Squash--;
-							WorldMove(DOWN);
+							CameraMove(DOWN);
 							frames++;
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(6);
 						}
-						WorldMove(DOWN);
+						CameraMove(DOWN);
 						frames++;
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(2);
@@ -198,21 +199,21 @@ void animation(HWND hWnd)
 					else if (frames <= 100 && frames > 80) {
 						glide = true; Sleep(4); while (Squash > 3)
 						{
-							Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(7); WorldMove(DOWN);
+							Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(7); CameraMove(DOWN);
 						}frames++;
 					}
 				}
 				else break;
 			}
-			while (!WallCheckTop())
+			while (WallCheckTop())
 			{
-				Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); WorldMove(DOWN);
+				Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); CameraMove(DOWN);
 				while (Squash != 0)
 				{
 					if (Squash > 0)Squash--;
 					else Squash++;
 					Squish++;
-					WorldMove(DOWN);
+					CameraMove(DOWN);
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(10);
 				}
@@ -220,7 +221,7 @@ void animation(HWND hWnd)
 				{
 					if (Squish > 0) Squish--;
 					else Squish++;
-					WorldMove(UP);
+					CameraMove(UP);
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(10);
 				}
@@ -230,7 +231,7 @@ void animation(HWND hWnd)
 			while (Squash != 0)
 			{
 				Squash--;
-				WorldMove(DOWN);
+				CameraMove(DOWN);
 				InvalidateRect(hWnd, NULL, FALSE);
 				Sleep(7);
 			}
@@ -246,7 +247,7 @@ void animation(HWND hWnd)
 
 		//**************************************************************************************************************************\\
 
-				// Falling condition
+		// Falling condition
 		if (fall && !collision)
 		{
 			// Wall jumping
@@ -274,11 +275,11 @@ void animation(HWND hWnd)
 							InvalidateRect(hWnd, NULL, FALSE);
 							collision = true;
 							fall = false;
-							WorldMove(UP);
+							CameraMove(UP);
 							Sleep(10);
 						}
 						fall = false;
-						WorldMove(UP);
+						CameraMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(15);
 						if (!WallCheckLeft()) { 
@@ -289,9 +290,13 @@ void animation(HWND hWnd)
 					}
 					while (Squash != 0)
 					{
-						 Squash--;
+						Squash--;
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(10);
+					}
+					if (jump)
+					{
+						left = false;
 					}
 					if (!jump)
 					{
@@ -321,12 +326,12 @@ void animation(HWND hWnd)
 							InvalidateRect(hWnd, NULL, FALSE);
 							collision = true;
 							fall = false;
-							WorldMove(UP);
+							CameraMove(UP);
 							Sleep(10);
 						}
 						
 						fall = false;
-						WorldMove(UP);
+						CameraMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(15);
 						if (!WallCheckRight()) {
@@ -341,6 +346,10 @@ void animation(HWND hWnd)
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
 					}
+					if (jump)
+					{
+						right = false;
+					}
 					if (!jump)
 					{
 						Squash = 0;
@@ -353,28 +362,29 @@ void animation(HWND hWnd)
 
 			//-----------------------------------------------------------------------------\\
 
-			if (jump && collision)
+			if (jump && collision && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 			{
-				while (frames < 100)
+				while (frames < 100 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 				{
 					Squish = 0;
-					while (Squish <= 6 && frames < 1)
+					while (Squish <= 6 && frames < 1 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 					{
 						Squish++;
 						InvalidateRect(hWnd, NULL, FALSE);
-						Sleep(10);
+						Sleep(7);
 					}
-					while (Squish != -1 && frames < 1)
+					while (Squish != -1 && frames < 1 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 					{
 						Squish--;
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(6);
 					}
+					Squish = 0;
 					if (!WallCheckTop() && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 					{
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
-						WorldMove(DOWN);
+						CameraMove(DOWN);
 
 						if (frames <= 50)
 						{
@@ -383,13 +393,13 @@ void animation(HWND hWnd)
 							{
 								Squash++;
 								frames++;
-								WorldMove(DOWN);
+								CameraMove(DOWN);
 								InvalidateRect(hWnd, NULL, FALSE);
 								Sleep(1);
 								continue;
 							}
 							frames++;
-							WorldMove(DOWN);
+							CameraMove(DOWN);
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(1);
 							continue;
@@ -399,12 +409,12 @@ void animation(HWND hWnd)
 							{
 								collision = false;
 								Squash--;
-								WorldMove(DOWN);
+								CameraMove(DOWN);
 								frames++;
 								InvalidateRect(hWnd, NULL, FALSE);
 								Sleep(6);
 							}
-							WorldMove(DOWN);
+							CameraMove(DOWN);
 							frames++;
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(2);
@@ -412,21 +422,21 @@ void animation(HWND hWnd)
 						else if (frames <= 100 && frames > 80) {
 							glide = true; Sleep(4); while (Squash > 3)
 							{
-								Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(7); WorldMove(DOWN);
+								Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(7); CameraMove(DOWN);
 							}frames++;
 						}
 					}
 					else break;
 				}
-				while (!WallCheckTop())
+				while (WallCheckTop())
 				{
-					Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); WorldMove(DOWN);
+					Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); CameraMove(DOWN);
 					while (Squash != 0)
 					{
 						if (Squash > 0)Squash--;
 						else Squash++;
 						Squish++;
-						WorldMove(DOWN);
+						CameraMove(DOWN);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(10);
 					}
@@ -434,7 +444,7 @@ void animation(HWND hWnd)
 					{
 						if (Squish > 0) Squish--;
 						else Squish++;
-						WorldMove(UP);
+						CameraMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(10);
 					}
@@ -444,7 +454,7 @@ void animation(HWND hWnd)
 				while (Squash != 0)
 				{
 					Squash--;
-					WorldMove(DOWN);
+					CameraMove(DOWN);
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(7);
 				}
@@ -467,7 +477,7 @@ void animation(HWND hWnd)
 					if (Squish != 0) { Squish--; Sleep(10); }
 					Squash++;
 					frames++;
-					WorldMove(UP);
+					CameraMove(UP);
 					InvalidateRect(hWnd, NULL, FALSE);
 					if (frames < 20) { Sleep(7); }
 				}
@@ -484,7 +494,7 @@ void animation(HWND hWnd)
 					{
 						Squash--;
 						Squish++;
-						WorldMove(DOWN);
+						CameraMove(DOWN);
 						offset++;
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(7);
@@ -492,14 +502,14 @@ void animation(HWND hWnd)
 					while (Squish != 0)
 					{
 						Squish--;
-						WorldMove(UP);
+						CameraMove(UP);
 						offset--;
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(5);
 					}
 					while (offset != 0)
 					{
-						WorldMove(DOWN);
+						CameraMove(DOWN);
 						offset++;
 					}
 					Player.bottom = Pointy->top;
@@ -509,7 +519,7 @@ void animation(HWND hWnd)
 					break;
 				}
 				frames++;
-				WorldMove(UP);
+				CameraMove(UP);
 				InvalidateRect(hWnd, NULL, FALSE);
 				if (frames < 20) Sleep(3);
 				else if (frames < 70 && frames >= 20) {
@@ -518,7 +528,7 @@ void animation(HWND hWnd)
 					while (Squash < 7) {
 						Squash++;
 						frames++;
-						WorldMove(UP);
+						CameraMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(6);
 					}
@@ -533,7 +543,7 @@ void animation(HWND hWnd)
 					{
 						Squash++;
 						frames++;
-						WorldMove(UP);
+						CameraMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(5);
 					}
@@ -550,7 +560,7 @@ void animation(HWND hWnd)
 					{
 						Squash++;
 						frames++;
-						WorldMove(UP);
+						CameraMove(UP);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
 					}
@@ -629,7 +639,7 @@ void animation(HWND hWnd)
 					{
 						Squash--;
 						Squish++;
-						WorldMove(DOWN);
+						CameraMove(DOWN);
 						offset++;
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(5);
@@ -637,14 +647,14 @@ void animation(HWND hWnd)
 					while (Squish != 0)
 					{
 						Squish--;
-						WorldMove(UP);
+						CameraMove(UP);
 						offset--;
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(5);
 					}
 					while (offset != 0)
 					{
-						WorldMove(DOWN);
+						CameraMove(DOWN);
 						offset++;
 					}
 					Player.bottom = Pointy->top;
@@ -727,24 +737,23 @@ void movement(HWND hWnd)
 //***********************************************************************************************************\\
 
 		//RIGHT
-		if (right)
+		if (right && !WallCheckRight())
 		{
-			Player.right++;
 			if (LandCheck()) {}
 			while (right)
 			{
-				if ((collision && Player.left < Pointy->right) && !WallCheckRight() && !jump && !fall)
+				if ((collision && Player.left < Pointy->right) && !WallCheckRight())
 				{
 					toggle = 1;
 					if (!fast)
 					{
-						WorldMove(RIGHT);
+						CameraMove(RIGHT);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(4);
 					}
 					else if(fast)
 					{
-						WorldMove(RIGHT);
+						CameraMove(RIGHT);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(3);
 					}
@@ -754,13 +763,13 @@ void movement(HWND hWnd)
 					while ((!collision && !slow) && !WallCheckRight()) {
 						if (glide && toggle == 1)
 						{
-							WorldMove(RIGHT);
+							CameraMove(RIGHT);
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(2);
 						}
 						else if (toggle == 1)
 						{
-							WorldMove(RIGHT);
+							CameraMove(RIGHT);
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(3);
 						}
@@ -773,19 +782,19 @@ void movement(HWND hWnd)
 				}
 				else if (!(LandCheck()) && !WallCheckRight())
 				{
-					WorldMove(RIGHT);
+					CameraMove(RIGHT);
 					fall = true;
 					collision = false;
 					while ((fall && right) && !WallCheckRight())
 					{
 						if (slow)
 						{
-							WorldMove(RIGHT);
+							CameraMove(RIGHT);
 							Sleep(9);
 						}
 						else if (slower)
 						{
-							WorldMove(RIGHT);
+							CameraMove(RIGHT);
 							Sleep(15);
 						}
 						InvalidateRect(hWnd, NULL, FALSE);
@@ -797,40 +806,40 @@ void movement(HWND hWnd)
 //***********************************************************************************************************\\
 
 		//LEFT
-		if (left)
+		if (left && !WallCheckLeft())
 		{
-			Player.left--;
 			if (LandCheck()){}
 			while (left)
 			{
-				if ((collision && Player.right > Pointy->left) && !WallCheckLeft() && !jump && !fall)
+				if ((collision && Player.right > Pointy->left) && !WallCheckLeft())
 				{
 					toggle = 0;
 					if (!fast)
 					{
-						WorldMove(LEFT);
+						CameraMove(LEFT);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(4);
 					}
 					else if (fast)
 					{
-						WorldMove(LEFT);
+						CameraMove(LEFT);
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(3);
 					}
+					
 				}
 				else if (((LandCheck()) || ((jump || fall) && !slow && !slower)) && !WallCheckLeft())
 				{
 					while ((!collision && !slow) && !WallCheckLeft()) {
 						if (glide && toggle == 0)
 						{
-							WorldMove(LEFT);
+							CameraMove(LEFT);
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(2);
 						}
 						else if (toggle == 0)
 						{
-							WorldMove(LEFT);
+							CameraMove(LEFT);
 							InvalidateRect(hWnd, NULL, FALSE);
 							Sleep(3);
 						}
@@ -842,19 +851,19 @@ void movement(HWND hWnd)
 				}
 				else if (!(LandCheck()) && !WallCheckLeft())
 				{
-					WorldMove(LEFT);
+					CameraMove(LEFT);
 					fall = true;
 					collision = false;
 					while ((fall && left) && !WallCheckLeft())
 					{
 						if (slow)
 						{
-							WorldMove(LEFT);
+							CameraMove(LEFT);
 							Sleep(9);
 						}
 						else if (slower)
 						{
-							WorldMove(LEFT);
+							CameraMove(LEFT);
 							Sleep(15);
 						}
 						InvalidateRect(hWnd, NULL, FALSE);
@@ -1105,9 +1114,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			else if (wParam == VK_RIGHT || wParam == 0x44)
 			{
-				right = true;
-				left = false;
-				toggle = 1;
+				 right = true;
+				 left = false;
+				 toggle = 1;
 				
 			}
 			else if (wParam == VK_LEFT|| wParam == 0x41)
@@ -1124,13 +1133,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				right = false;
 				toggle = -1;
-				Player.right--;
 			}
 			else if (wParam == VK_LEFT || wParam == 0x41)
 			{
 				left = false;
 				toggle = -1;
-				Player.left++;
 			}
 			break;
 
@@ -1152,7 +1159,7 @@ BOOL LandCheck()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.bottom >= entities[i]->top && Player.left < entities[i]->right && Player.right > entities[i]->left && Player.top < entities[i]->top)
+		if (Player.bottom >= entities[i]->top && Player.left < entities[i]->right-1 && Player.right > entities[i]->left+1 && Player.top < entities[i]->top)
 		{
 			Pointy = entities[i];
 			return true;                                                                                                                          
@@ -1205,7 +1212,7 @@ BOOL WallCheckRight()
 	return false;
 }
 
-void WorldMove(Dir d)
+void CameraMove(Dir d)
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
