@@ -158,7 +158,7 @@ void animation(HWND hWnd)
 					Sleep(6);
 				}
 				Squish = 0;
-				if (!WallCheckTop() && !((left && WallCheckLeft()) || (right && WallCheckRight())))
+				if (!((left && WallCheckLeft()) || (right && WallCheckRight())))
 				{
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(1);
@@ -205,7 +205,7 @@ void animation(HWND hWnd)
 				}
 				else break;
 			}
-			while (WallCheckTop())
+			while (((left && WallCheckLeft()) || (right && WallCheckRight())))
 			{
 				Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); CameraMove(DOWN);
 				while (Squash != 0)
@@ -225,6 +225,7 @@ void animation(HWND hWnd)
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(10);
 				}
+				collision = false;
 				break;
 			}
 			frames = 0; // reset
@@ -235,7 +236,7 @@ void animation(HWND hWnd)
 				InvalidateRect(hWnd, NULL, FALSE);
 				Sleep(7);
 			}
-			while (Squish < 6)
+			while (Squish < 6 && !(((left && WallCheckLeft()) || (right && WallCheckRight()))))
 			{
 				Squish++;
 				InvalidateRect(hWnd, NULL, FALSE);
@@ -380,7 +381,7 @@ void animation(HWND hWnd)
 						Sleep(6);
 					}
 					Squish = 0;
-					if (!WallCheckTop() && !((left && WallCheckLeft()) || (right && WallCheckRight())))
+					if ( !((left && WallCheckLeft()) || (right && WallCheckRight())))
 					{
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(1);
@@ -428,7 +429,7 @@ void animation(HWND hWnd)
 					}
 					else break;
 				}
-				while (WallCheckTop())
+				while (((left && WallCheckLeft()) || (right && WallCheckRight())))
 				{
 					Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); CameraMove(DOWN);
 					while (Squash != 0)
@@ -448,6 +449,7 @@ void animation(HWND hWnd)
 						InvalidateRect(hWnd, NULL, FALSE);
 						Sleep(10);
 					}
+					collision = false;
 					break;
 				}
 				frames = 0; // reset
@@ -458,7 +460,7 @@ void animation(HWND hWnd)
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(7);
 				}
-				while (Squish < 6)
+				while (Squish < 6 && !(((left && WallCheckLeft()) || (right && WallCheckRight()))))
 				{
 					Squish++;
 					InvalidateRect(hWnd, NULL, FALSE);
