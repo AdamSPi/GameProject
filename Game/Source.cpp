@@ -1,7 +1,7 @@
-// GT_HelloWorldWin32.cpp  
-// compile with: /D_UNICODE /DUNICODE /DWIN32 /D_WINDOWS /c  
-
-// https://msdn.microsoft.com/en-us/library/bb384843.aspx
+// Source.cpp  
+// Read readme.txt for  controls and instructions
+// Unresolved issues: 10% of the time starting the game will return an error trying again will fix and some collision detection bugs
+// I tried creating separate classes for entity but the window drawing wouldn't work so had to settle with globals
 
 #include <windows.h>  
 #include <stdlib.h>  
@@ -50,6 +50,7 @@ BOOL WallCheckTop();
 // Moves the entire world to keep the Player centered on the screen
 void CameraMove(Dir d);
 
+// Coin  rectangles with boolean flags
 struct coin
 {
 	BOOL taken = false;
@@ -61,9 +62,9 @@ std::vector<RECT*> entities;
 std::vector<coin*> coins;
 
 // Animation modifiers
-int Squish = 0;
-int Squash = 0;
-int Squanch = 0;
+int Squish = 0; // short and fat (used when landing or maximum jump height)
+int Squash = 0; // tall and skinny (used when in mid-jump or fall)
+int Squanch = 0;// walking animation
 int frames = 0;
 
 // Entities
@@ -140,6 +141,7 @@ BOOL run;
 
 void Spawn()
 {
+	// Set all the rect's dimensions
 	Player.left = 482;
 	Player.top = -135;
 	Player.bottom = -100;
@@ -304,7 +306,7 @@ void animation(HWND hWnd)
 			while (frames < 100 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 			{
 				Squish = 0;
-				while (Squish <= 6 && frames < 1 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
+				while (Squish <= 6 && frames < 1 && !((left && WallCheckLeft()) || (right && WallCheckRight()))) // anticipation animation
 				{
 					Squish++;
 					InvalidateRect(hWnd, NULL, FALSE);
@@ -317,13 +319,13 @@ void animation(HWND hWnd)
 					Sleep(6);
 				}
 				Squish = 0;
-				if (!((left && WallCheckLeft()) || (right && WallCheckRight())) && !WallCheckTop())
+				if (!((left && WallCheckLeft()) || (right && WallCheckRight())) && !WallCheckTop()) // check so that player doesn't hit anyhthing
 				{
 					InvalidateRect(hWnd, NULL, FALSE);
 					Sleep(1);
 					CameraMove(DOWN);
 
-					if (frames <= 50)
+					if (frames <= 50) // Sleep time will get slower as the cycles go through
 					{
 						if (Squash < 8)
 						{
@@ -411,6 +413,7 @@ void animation(HWND hWnd)
 				break;
 			}
 			frames = 0; // reset
+			// resetting body modifiers when top is reached
 			while (Squash != 0)
 			{
 				Squash--;
@@ -483,6 +486,9 @@ void animation(HWND hWnd)
 						collision = false;
 						fall = true;
 					}
+
+					// holding button will not allow player to wall jump so 
+					// setting it to false with jump without having to let go
 					if (jump)
 					{
 						left = false;
@@ -535,6 +541,8 @@ void animation(HWND hWnd)
 						collision = false;
 						fall = true;
 					}
+					// holding button will not allow player to wall jump so 
+					// setting it to false with jump without having to let go
 					if (jump)
 					{
 						right = false;
@@ -543,7 +551,7 @@ void animation(HWND hWnd)
 			}
 
 			//-----------------------------------------------------------------------------\\
-
+			// Jump animation in case player is jump off a wall
 			if (jump && collision && !((left && WallCheckLeft()) || (right && WallCheckRight())))
 			{
 				while (frames < 100 && !((left && WallCheckLeft()) || (right && WallCheckRight())))
@@ -674,7 +682,7 @@ void animation(HWND hWnd)
 			}
 
 			//-----------------------------------------------------------------------------\\
-
+			// Falling animation
 			while (!collision && !((left && WallCheckLeft())||(right && WallCheckRight())))
 			{
 				while (Squash < 4 && !jump)
@@ -691,6 +699,7 @@ void animation(HWND hWnd)
 				{
 					break;
 				}
+				// Check if player has landed
 				if (LandCheck())
 				{
 					fall = false;
@@ -821,6 +830,7 @@ void animation(HWND hWnd)
 		else { while (Squanch != -1) { Squanch--; InvalidateRect(hWnd, NULL, FALSE); Sleep(30); } }
 
 		}
+		// respawn animation (doesn't follow player) 
 		else
 		{
 			while (!collision)
@@ -934,6 +944,7 @@ void animation(HWND hWnd)
 
 void movement(HWND hWnd)
 {
+	// add entites and coins to vectors
 	entities.push_back(&Ground);
 
 	entities.push_back(&Wall1);
@@ -965,12 +976,6 @@ void movement(HWND hWnd)
 	coin4.body = &Coin4;
 	coin5.body = &Coin5;
 
-	coins.push_back(&coin1);
-	coins.push_back(&coin2);
-	coins.push_back(&coin3);
-	coins.push_back(&coin4);
-	coins.push_back(&coin5);
-
 	while (run)
 	{
 
@@ -998,6 +1003,7 @@ void movement(HWND hWnd)
 							Sleep(3);
 						}
 					}
+					// if player is falling
 					else if (((LandCheck()) || ((jump || fall) && !slow && !slower)))
 					{
 						while ((!collision && !slow) && !WallCheckRight()) {
@@ -1013,6 +1019,7 @@ void movement(HWND hWnd)
 								InvalidateRect(hWnd, NULL, FALSE);
 								Sleep(3);
 							}
+							// if player is midair and switches directions
 							else if (toggle == 0)
 							{
 								slow = true;
@@ -1068,6 +1075,7 @@ void movement(HWND hWnd)
 						}
 
 					}
+					// if player is falling
 					else if (((LandCheck()) || ((jump || fall) && !slow && !slower)))
 					{
 						while ((!collision && !slow) && !WallCheckLeft()) {
@@ -1083,6 +1091,7 @@ void movement(HWND hWnd)
 								InvalidateRect(hWnd, NULL, FALSE);
 								Sleep(3);
 							}
+							// if player is midair and switches directions
 							else if (toggle == 1)
 							{
 								slow = true;
@@ -1119,13 +1128,20 @@ void movement(HWND hWnd)
 
 	}// end game loop
 }
-void scoring(HWND hWnd)
+void scoring(HWND hWnd) // scoring thread
 {
 	BOOL a;
 	BOOL b;
 	int foo;
 	int bar;
 	int frames = 0;
+
+	coins.push_back(&coin1);
+	coins.push_back(&coin2);
+	coins.push_back(&coin3);
+	coins.push_back(&coin4);
+	coins.push_back(&coin5);
+
 	while (run)
 	{
 		for (int i = 0; i < coins.size(); i++)
@@ -1134,8 +1150,8 @@ void scoring(HWND hWnd)
 				continue;
 			}
 			foo = (coins[i]->body->right - coins[i]->body->left);
-			bar = (coins[i]->body->left-coins[i]->body->right);
-			if (foo == -25 && bar == 25)
+			bar = (coins[i]->body->left - coins[i]->body->right);
+			if (foo == -25 && bar == 25) // alternate direction
 			{
 				Sleep(40);
 				b = true;
@@ -1159,6 +1175,7 @@ void scoring(HWND hWnd)
 				coins[i]->body->right++;
 				InvalidateRect(hWnd, NULL, FALSE);
 			}
+			// if player collides
 			if ((Player.left <= coins[i]->body->right) && (Player.right >= coins[i]->body->left) && (Player.top <= coins[i]->body->bottom) && (Player.bottom >= coins[i]->body->top))
 			{
 				coins[i]->taken = true;
@@ -1168,6 +1185,7 @@ void scoring(HWND hWnd)
 			{
 				Sleep(5);
 			}
+			// run animation
 			if (coins[i]->taken)
 			{
 				while (coins[i]->render)
