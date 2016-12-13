@@ -10,7 +10,10 @@
 #include <thread> 
 #include <atomic> 
 #include <list>
+#include <string>
+#include <atlbase.h>
 #include <vector>
+#include <time.h>
 // Global variables  
 
 enum Dir
@@ -47,8 +50,15 @@ BOOL WallCheckTop();
 // Moves the entire world to keep the Player centered on the screen
 void CameraMove(Dir d);
 
+struct coin
+{
+	BOOL taken = false;
+	BOOL render = true;
+	RECT * body;
+};
 // List of collidables objects
 std::vector<RECT*> entities;
+std::vector<coin*> coins;
 
 // Animation modifiers
 int Squish = 0;
@@ -58,13 +68,34 @@ int frames = 0;
 
 // Entities
 static RECT Player;
+
 static RECT Ground;
+
 static RECT Wall1;
 static RECT Wall2;
 static RECT Wall3;
 static RECT Wall4;
-static RECT Platform1;
+static RECT Wall5;
+static RECT Wall6;
+static RECT Wall7;
+static RECT Wall9;
 
+static RECT Land1;
+static RECT Land2;
+static RECT Land3;
+static RECT Land4;
+static RECT Land5;
+static RECT Land6;
+static RECT Land7;
+static RECT Land8;
+
+static RECT Vanity1;
+
+static RECT Platform1;
+static RECT Platform2;
+static RECT Platform3;
+
+static RECT Win;
 // Pointer
 static RECT * Pointy;
 
@@ -85,6 +116,26 @@ BOOL slow;
 BOOL slower;
 int toggle = -1;
 
+BOOL win = false;
+
+int Score = 0;
+
+static RECT Coin1;
+static RECT Coin2;
+static RECT Coin3;
+static RECT Coin4;
+static RECT Coin5;
+
+coin coin1;
+coin coin2;
+coin coin3;
+coin coin4;
+coin coin5;
+
+time_t start;
+static RECT timer;
+static RECT score;
+
 BOOL run;
 
 void Spawn()
@@ -104,27 +155,135 @@ void Spawn()
 	Wall1.right = Wall1.left + 100;
 	Wall1.bottom = Ground.top + 1;
 
-	Wall2.left = Wall1.left + 200;
+	Wall2.left = Wall1.left + 225;
 	Wall2.top = Wall1.top - 250;
 	Wall2.right = Wall2.left + 100;
 	Wall2.bottom = Wall1.top+100;
 
 	Wall3.left = Ground.right - 100;
-	Wall3.top = Ground.top - 250;
+	Wall3.top = Ground.top - 300;
 	Wall3.right = Ground.right;
 	Wall3.bottom = Ground.top + 1;
 	
 	Wall4.left = -100;
-	Wall4.top = Wall1.top - 250;
+	Wall4.top = Wall1.top - 200;
 	Wall4.right = 0;
 	Wall4.bottom = (HEIGHT/2)+100;
 
-	Platform1.left = Ground.right-1;
-	Platform1.top = Ground.top;
-	Platform1.right = Ground.right+100;
-	Platform1.bottom = Ground.bottom;
+	Wall5.left = -800;
+	Wall5.top = Land2.top - 750;
+	Wall5.right = Wall5.left + 100;
+	Wall5.bottom = Wall4.top+1;
 
+	Wall6.left = Wall5.right + 200;
+	Wall6.top = Wall5.top-300;
+	Wall6.right = Wall6.left + 100;
+	Wall6.bottom = Wall4.top -150;
+
+	Land1.left = Ground.right-1;
+	Land1.top = Ground.top;
+	Land1.right = Ground.right+100;
+	Land1.bottom = Ground.bottom;
+
+	Land2.left = -800;
+	Land2.top = Wall4.top;
+	Land2.right = Wall4.right;
+	Land2.bottom = Land2.top +100;
+
+	Land3.left = Wall3.right-1;
+	Land3.top = Wall3.top;
+	Land3.right = 1300;
+	Land3.bottom = Land3.top + 81;
+
+	Land4.left = Land1.right - 1;
+	Land4.top = Land1.top;
+	Land4.right = 1700;
+	Land4.bottom = Land1.top + 100;
+
+	Land5.left = Wall6.right-1;
+	Land5.top = Wall6.top;
+	Land5.right = Land5.left+500;
+	Land5.bottom = Land5.top + 100;
+
+	Land6.left = Wall5.left-300;
+	Land6.top = Wall5.top;
+	Land6.right = Wall5.left+1;
+	Land6.bottom = Land6.top + 100;
+
+	Wall7.left = Land6.left - 100;
+	Wall7.top = Land6.top - 800;
+	Wall7.right = Land6.left;
+	Wall7.bottom = Land6.top + 1;
+
+	Vanity1.top = Land4.bottom-1;
+	Vanity1.left = Land1.right - 1;
+	Vanity1.right = Vanity1.left + 100;
+	Vanity1.bottom = Vanity1.top + 150;
+
+	Platform1.top = Land3.bottom - 1;
+	Platform1.left = Land3.right - 1;
+	Platform1.right = Platform1.left + 80;
+	Platform1.bottom = Platform1.top + 80;
+
+	Platform2.top = Land5.top+10;
+	Platform2.left = Land5.right + 200;
+	Platform2.right = Platform2.left + 250;
+	Platform2.bottom = Platform2.top + 90;
+
+	Platform3.top = Land5.top+10;
+	Platform3.left = Platform2.right + 250;
+	Platform3.right = Platform3.left + 250;
+	Platform3.bottom = Platform3.top + 90;
+
+	Land7.left = Platform3.right + 200;
+	Land7.top = Land5.top;
+	Land7.right = Land7.left + 600;
+	Land7.bottom = Land7.top + 100;
+
+	Wall9.left = Land7.right - 100;
+	Wall9.top = Land7.top-500;
+	Wall9.right = Land7.right;
+	Wall9.bottom = Land7.top + 1;
+
+	Coin1.left = 38;
+	Coin1.top = Wall1.top - 50;
+	Coin1.right = 63;
+	Coin1.bottom = Coin1.top + 25;
+
+	Coin2.left = Wall3.right+50;
+	Coin2.top = Land1.top - 50;
+	Coin2.right = Coin2.left +25;
+	Coin2.bottom = Coin2.top + 25;
+
+	Coin3.left = Wall5.right + 50;
+	Coin3.top = Land2.top - 50;
+	Coin3.right = Coin3.left + 25;
+	Coin3.bottom = Coin3.top + 25;
+
+	Coin4.left = Platform2.left + 162;
+	Coin4.top = Platform2.top - 50;
+	Coin4.right = Coin4.left + 25;
+	Coin4.bottom = Coin4.top + 25;
+
+	Coin5.left = Land7.left + 238;
+	Coin5.top = Land7.top - 50;
+	Coin5.right = Coin5.left + 25;
+	Coin5.bottom = Coin5.top + 25;
 	
+	Win.left = 480;
+	Win.right = 520;
+	Win.top = -200;
+	Win.bottom = -185;
+
+	timer.left = 0;
+	timer.right = 29;
+	timer.top = 0;
+	timer.bottom = 15;
+
+	score.left = 0;
+	score.right = 8;
+	score.top = timer.bottom+1;
+	score.bottom = score.top + 14;
 
 }
 
@@ -134,7 +293,7 @@ void Spawn()
 
 void animation(HWND hWnd)
 {
-
+	start = time(0);
 	while (run)
 	{
 		if (Camera)
@@ -324,6 +483,10 @@ void animation(HWND hWnd)
 						collision = false;
 						fall = true;
 					}
+					if (jump)
+					{
+						left = false;
+					}
 				}
 				if (right && WallCheckRight() && !LandCheck())
 				{
@@ -372,8 +535,11 @@ void animation(HWND hWnd)
 						collision = false;
 						fall = true;
 					}
+					if (jump)
+					{
+						right = false;
+					}
 				}
-				
 			}
 
 			//-----------------------------------------------------------------------------\\
@@ -511,14 +677,19 @@ void animation(HWND hWnd)
 
 			while (!collision && !((left && WallCheckLeft())||(right && WallCheckRight())))
 			{
-				while (Squash < 4)
+				while (Squash < 4 && !jump)
 				{
 					if (Squish != 0) { Squish--; Sleep(10); }
 					Squash++;
 					frames++;
 					CameraMove(UP);
 					InvalidateRect(hWnd, NULL, FALSE);
+					Sleep(10);
 					if (frames < 20) { Sleep(7); }
+				}
+				if (jump)
+				{
+					break;
 				}
 				if (LandCheck())
 				{
@@ -764,11 +935,41 @@ void animation(HWND hWnd)
 void movement(HWND hWnd)
 {
 	entities.push_back(&Ground);
+
 	entities.push_back(&Wall1);
 	entities.push_back(&Wall2);
 	entities.push_back(&Wall3);
 	entities.push_back(&Wall4);
+	entities.push_back(&Wall5);
+	entities.push_back(&Wall6);
+	entities.push_back(&Wall7);
+	entities.push_back(&Wall9);
+
+	entities.push_back(&Land1);
+	entities.push_back(&Land2);
+	entities.push_back(&Land3);
+	entities.push_back(&Land4);
+	entities.push_back(&Land5);
+	entities.push_back(&Land6);
+	entities.push_back(&Land7);
+
+	entities.push_back(&Vanity1);
+
 	entities.push_back(&Platform1);
+	entities.push_back(&Platform2);
+	entities.push_back(&Platform3);
+
+	coin1.body = &Coin1;
+	coin2.body = &Coin2;
+	coin3.body = &Coin3;
+	coin4.body = &Coin4;
+	coin5.body = &Coin5;
+
+	coins.push_back(&coin1);
+	coins.push_back(&coin2);
+	coins.push_back(&coin3);
+	coins.push_back(&coin4);
+	coins.push_back(&coin5);
 
 	while (run)
 	{
@@ -918,6 +1119,137 @@ void movement(HWND hWnd)
 
 	}// end game loop
 }
+void scoring(HWND hWnd)
+{
+	BOOL a;
+	BOOL b;
+	int foo;
+	int bar;
+	int frames = 0;
+	while (run)
+	{
+		for (int i = 0; i < coins.size(); i++)
+		{
+			if (!coins[i]->render) {
+				continue;
+			}
+			foo = (coins[i]->body->right - coins[i]->body->left);
+			bar = (coins[i]->body->left-coins[i]->body->right);
+			if (foo == -25 && bar == 25)
+			{
+				Sleep(40);
+				b = true;
+				a = false;
+			}
+			else if (bar == -25 && foo == 25)
+			{
+				Sleep(40);
+				a = true;
+				b = false;
+			}
+			if (a)
+			{
+				coins[i]->body->left++;
+				coins[i]->body->right--;
+				InvalidateRect(hWnd, NULL, FALSE);
+			}
+			else if (b)
+			{
+				coins[i]->body->left--;
+				coins[i]->body->right++;
+				InvalidateRect(hWnd, NULL, FALSE);
+			}
+			if ((Player.left <= coins[i]->body->right) && (Player.right >= coins[i]->body->left) && (Player.top <= coins[i]->body->bottom) && (Player.bottom >= coins[i]->body->top))
+			{
+				coins[i]->taken = true;
+				Score++;
+			}
+			else if (coins[i]->render && !coins[i]->taken)
+			{
+				Sleep(5);
+			}
+			if (coins[i]->taken)
+			{
+				while (coins[i]->render)
+				{
+					foo = (coins[i]->body->right - coins[i]->body->left);
+					bar = (coins[i]->body->left - coins[i]->body->right);
+					if (foo == -25 && bar == 25)
+					{
+						b = true;
+						a = false;
+					}
+					else if (bar == -25 && foo == 25)
+					{
+						a = true;
+						b = false;
+					}
+					if (a)
+					{
+						coins[i]->body->left++;
+						coins[i]->body->right--;
+						InvalidateRect(hWnd, NULL, FALSE);
+					}
+					else if (b)
+					{
+						coins[i]->body->left--;
+						coins[i]->body->right++;
+						InvalidateRect(hWnd, NULL, FALSE);
+					}
+					coins[i]->body->top--;
+					coins[i]->body->bottom--;
+					Sleep(7);
+					InvalidateRect(hWnd, NULL, FALSE);
+					frames++;
+					if (frames == 80)
+					{
+						while (!((coins[i]->body->bottom - coins[i]->body->top) <= 0))
+						{
+							if (a)
+							{
+								if (!(foo <= 0))
+								{
+									coins[i]->body->left++;
+									coins[i]->body->right--;
+									InvalidateRect(hWnd, NULL, FALSE);
+								}
+							}
+							else if(b)
+							{
+								if (!(bar <= 0))
+								{
+									coins[i]->body->left--;
+									coins[i]->body->right++;
+									InvalidateRect(hWnd, NULL, FALSE);
+								}
+							}
+							coins[i]->body->top++;
+							coins[i]->body->bottom--;
+							InvalidateRect(hWnd, NULL, FALSE);
+							Sleep(15);
+						}
+						coins[i]->render = false;
+						coins[i]->taken = false;
+						frames = 0;
+					}
+				}
+			}
+
+			if (Score == 5)
+			{
+				while (Win.top != 250)
+				{
+					Win.top++;
+					Win.bottom++;
+					Sleep(1);
+					InvalidateRect(hWnd, NULL, FALSE);
+				}
+			}
+		}
+		
+	}
+}
+
 
 //***********************************************************************************************************\\
 
@@ -997,6 +1329,7 @@ int CALLBACK WinMain(
 	run = true;
 	std::thread t1{ animation, hWnd };
 	std::thread t2{ movement, hWnd };
+	std::thread t3{ scoring, hWnd };
 
 	// Main message loop:  
 	MSG msg;
@@ -1005,11 +1338,12 @@ int CALLBACK WinMain(
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-
+	
 	// kill game thread
 	run = false;
 	t1.join();
 	t2.join();
+	t3.join();
 
 	return (int)msg.wParam;
 }
@@ -1029,7 +1363,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc;                 // device context (DC) for window  
 	PAINTSTRUCT ps;          // paint data for BeginPaint and EndPaint  
-
+	double seconds_since_start = difftime(time(0), start);
+	std::string time;
+	std::string scr;
 
 	HDC          hdcMem;
 	HBITMAP      hbmMem;
@@ -1078,6 +1414,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		case WM_PAINT:
 		{
+			
 			// Get DC for window
 			hdc = BeginPaint(hWnd, &ps);
 
@@ -1120,16 +1457,189 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				Wall3.bottom);
 			
 			Rectangle(hdcMem,
-				Platform1.left,
-				Platform1.top,
-				Platform1.right,
-				Platform1.bottom);
+				Land1.left,
+				Land1.top,
+				Land1.right,
+				Land1.bottom);
+
+			Rectangle(hdcMem,
+				Land2.left,
+				Land2.top,
+				Land2.right,
+				Land2.bottom);
+
+			Rectangle(hdcMem,
+				Land3.left,
+				Land3.top,
+				Land3.right,
+				Land3.bottom);
+
+			Rectangle(hdcMem,
+				Land4.left,
+				Land4.top,
+				Land4.right,
+				Land4.bottom);
+
+			Rectangle(hdcMem,
+				Land5.left,
+				Land5.top,
+				Land5.right,
+				Land5.bottom);
+                    
+			Rectangle(hdcMem,
+				Land6.left,
+				Land6.top,
+				Land6.right,
+				Land6.bottom);
+
+			Rectangle(hdcMem,
+				Land7.left,
+				Land7.top,
+				Land7.right,
+				Land7.bottom);
 
 			Rectangle(hdcMem,
 				Wall4.left,
 				Wall4.top,
 				Wall4.right,
 				Wall4.bottom);
+
+			Rectangle(hdcMem,
+				Wall5.left,
+				Wall5.top,
+				Wall5.right,
+				Wall5.bottom);
+
+			Rectangle(hdcMem,
+				Wall6.left,
+				Wall6.top,
+				Wall6.right,
+				Wall6.bottom);
+
+			Rectangle(hdcMem,
+				Wall7.left,
+				Wall7.top,
+				Wall7.right,
+				Wall7.bottom);
+
+			Rectangle(hdcMem,
+				Wall9.left,
+				Wall9.top,
+				Wall9.right,
+				Wall9.bottom);
+
+			Rectangle(hdcMem,
+				Vanity1.left,
+				Vanity1.top,
+				Vanity1.right,
+				Vanity1.bottom);
+
+			Rectangle(hdcMem,
+				Platform1.left,
+				Platform1.top,
+				Platform1.right,
+				Platform1.bottom);
+
+			Rectangle(hdcMem,
+				Platform2.left,
+				Platform2.top,
+				Platform2.right,
+				Platform2.bottom);
+
+			Rectangle(hdcMem,
+				Platform3.left,
+				Platform3.top,
+				Platform3.right,
+				Platform3.bottom);
+
+			
+
+			if (coin1.render)
+			{
+				Rectangle(hdcMem,
+					Coin1.left,
+					Coin1.top,
+					Coin1.right,
+					Coin1.bottom);
+			}
+			if (coin2.render)
+			{
+				Rectangle(hdcMem,
+					Coin2.left,
+					Coin2.top,
+					Coin2.right,
+					Coin2.bottom);
+			}
+			if (coin3.render)
+			{
+				Rectangle(hdcMem,
+					Coin3.left,
+					Coin3.top,
+					Coin3.right,
+					Coin3.bottom);
+			}
+			if (coin4.render)
+			{
+				Rectangle(hdcMem,
+					Coin4.left,
+					Coin4.top,
+					Coin4.right,
+					Coin4.bottom);
+			}
+			if (coin5.render)
+			{
+				Rectangle(hdcMem,
+					Coin5.left,
+					Coin5.top,
+					Coin5.right,
+					Coin5.bottom);
+			}
+			if (Score != 5)
+			{
+				time = std::to_string(seconds_since_start);
+				CA2T wt(time.c_str());
+				Rectangle(hdcMem,
+					timer.left,
+					timer.top,
+					timer.right,
+					timer.bottom);
+
+				DrawText(hdcMem,
+					wt,
+					6,
+					&timer,
+					(DT_VCENTER));
+
+				scr = std::to_string(Score);
+				CA2T tw(scr.c_str());
+
+				Rectangle(hdcMem,
+					score.left,
+					score.top,
+					score.right,
+					score.bottom);
+
+				DrawText(hdcMem,
+					tw,
+					1,
+					&score,
+					(DT_VCENTER));
+			}
+			if (Score == 5)
+			{
+				Rectangle(hdcMem,
+					Win.left,
+					Win.top,
+					Win.right,
+					Win.bottom);
+				DrawText(hdcMem,
+					"Finish",
+					6,
+					&Win,
+					(DT_VCENTER)
+				);
+
+			}
 
 			// Transfer the off-screen DC to the screen
 			BitBlt(hdc, 0, 0, WIDTH, HEIGHT, hdcMem, 0, 0, SRCCOPY);
@@ -1278,4 +1788,29 @@ void CameraMove(Dir d)
 			entities[i]->right--;
 		}
 	}
+	
+	for (int i = 0; i < coins.size(); i++)
+	{
+		if (d == UP)
+		{
+			coins[i]->body->top--;
+			coins[i]->body->bottom--;
+		}
+		else if (d == DOWN)
+		{
+			coins[i]->body->top++;
+			coins[i]->body->bottom++;
+		}
+		else if (d == LEFT)
+		{
+			coins[i]->body->left++;
+			coins[i]->body->right++;
+		}
+		else if (d == RIGHT)
+		{
+			coins[i]->body->left--;
+			coins[i]->body->right--;
+		}
+	}
+	
 }
