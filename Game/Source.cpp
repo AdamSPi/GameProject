@@ -1749,7 +1749,7 @@ BOOL WallCheckTop()
 {
 	for (int i = 0; i < entities.size(); i++)
 	{
-		if (Player.top <= entities[i]->bottom && Player.left < entities[i]->right-1 && Player.right > entities[i]->left+1 && Player.bottom > entities[i]->bottom)
+		if (Player.top <= entities[i]->bottom && Player.left < entities[i]->right-1 && Player.right > entities[i]->left+1 && Player.bottom >= entities[i]->bottom)
 		{
 			return true;
 		}
