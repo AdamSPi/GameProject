@@ -434,7 +434,7 @@ void animation(HWND hWnd)
 		//**************************************************************************************************************************\\
 
 		// Falling condition
-		if (fall && !collision)
+		if (fall)
 		{
 			// Wall jumping
 			if ((left || right))
@@ -683,8 +683,16 @@ void animation(HWND hWnd)
 
 			//-----------------------------------------------------------------------------\\
 			// Falling animation
-			while (!collision && !((left && WallCheckLeft())||(right && WallCheckRight())))
+			while (!jump && fall && !((left && WallCheckLeft())||(right && WallCheckRight())))
 			{
+				if (WallCheckLeft() || WallCheckRight())
+				{
+					collision = true;
+				}
+				else
+				{
+					collision = false;
+				}
 				while (Squash < 4 && !jump)
 				{
 					if (Squish != 0) { Squish--; Sleep(10); }
