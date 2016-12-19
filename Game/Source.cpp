@@ -617,7 +617,7 @@ void animation(HWND hWnd)
 					}
 					else break;
 				}
-				while (WallCheckTop())
+				while (WallCheckTop() && !(WallCheckLeft() || WallCheckRight()))
 				{
 					Squash--; InvalidateRect(hWnd, NULL, FALSE); Sleep(3); CameraMove(DOWN);
 					while (Squash != 0)
